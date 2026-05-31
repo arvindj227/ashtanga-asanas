@@ -54,6 +54,39 @@ body {
   box-shadow: 0 0 80px rgba(0,0,0,0.18);
 }
 
+/* ── Desktop overrides ── */
+@media (min-width: 900px) {
+  html { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 0;
+    box-shadow: 2px 0 40px rgba(0,0,0,0.12), -2px 0 40px rgba(0,0,0,0.12);
+    position: relative;
+    background: var(--cream); /* no dark gap at bottom */
+  }
+  /* on desktop: all screens auto height, body handles scroll */
+  .screen {
+    height: auto !important;
+    min-height: calc(100vh - 58px);
+    overflow: visible !important;
+  }
+  .screen-scroll {
+    overflow: visible !important;
+    flex: none !important;
+    height: auto !important;
+  }
+  /* bottom nav sticks to bottom of the frame */
+  .bottom-nav {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+}
+
 /* Remove iOS tap flash on all interactive elements */
 button, [data-id], .chip, .mode-card, .nav-btn {
   -webkit-tap-highlight-color: transparent;
@@ -183,7 +216,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   padding: 44px 28px 28px;
   text-align: center;
   position: relative;
-  /* no overflow:hidden — it clips the input focus ring and keyboard reflow */
+  overflow: hidden; /* clip the decorative ring */
 }
 
 .welcome-ring {
@@ -1208,6 +1241,9 @@ body.splashing .bottom-nav { visibility: hidden; }
 @media (hover: hover) {
   .btn-share-img:hover { background: var(--terra); color: var(--white); }
 }
+/* hidden by default, shown only on touch devices via JS */
+.btn-share-img { display: none; }
+.is-touch .btn-share-img { display: flex; }
 .btn-share-img.loading { opacity: 0.55; pointer-events: none; }
 .share-card {
   background: var(--forest);
@@ -1861,7 +1897,7 @@ const SECONDARY = [
 ];
 
 const FINISHING = [
-  { id:'f01', img:'images/poses/f01_urdhva_dhanurasana_400.png', s:'Urdhva Dhanurasana',     d:'ऊर्ध्व धनुरासन',     e:'Upward Bow / Wheel Pose',   series:'Finishing' },
+  { id:'f01', img:'images/poses/s01.png', s:'Urdhva Dhanurasana',     d:'ऊर्ध्व धनुरासन',     e:'Upward Bow / Wheel Pose',   series:'Finishing' },
   { id:'f02', img:'images/poses/f02_salamba_sarvangasana_400.png', s:'Salamba Sarvangasana',   d:'सालम्ब सर्वाङ्गासन', e:'Shoulderstand',   series:'Finishing' },
   { id:'f03', img:'images/poses/f03_halasana_400.png', s:'Halasana',               d:'हलासन',               e:'Plough Pose',               series:'Finishing' },
   { id:'f04', img:'images/poses/f04_karnapidasana_400.png', s:'Karnapidasana',          d:'कर्णपीडासन',          e:'Ear Pressing Pose',         series:'Finishing' },
@@ -2370,6 +2406,11 @@ function renderSeq(idx) {
 
 
 
+// Detect touch device and show share button accordingly
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  document.body.classList.add('is-touch');
+}
+
 // ─── SHARE SCREENSHOT ────────────────────────────────────────────────────────
 const shareBtn = document.getElementById('btn-share-img');
 
@@ -2388,10 +2429,11 @@ shareBtn.addEventListener('click', async () => {
       });
     }
 
+    // Capture the whole results screen for a richer share image
     const card = document.getElementById('share-card');
     const canvas = await html2canvas(card, {
       scale: 3,
-      backgroundColor: null,
+      backgroundColor: '#2C3E2D',
       useCORS: true,
       logging: false,
     });
