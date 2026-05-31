@@ -874,7 +874,7 @@ body.splashing .bottom-nav { visibility: hidden; }
 .seq-card {
   background: var(--white);
   box-shadow: var(--shadow-card);
-  padding: 22px 20px 18px;
+  padding: 14px 20px 18px;
   text-align: center;
   animation: flipIn 0.35s cubic-bezier(.22,.68,0,1.15) both;
 }
@@ -900,6 +900,7 @@ body.splashing .bottom-nav { visibility: hidden; }
 .seq-thumb:has(img)::before { display: none; }
 .seq-thumb:has(img) { background: #EDE5D8; }
 .seq-thumb svg { position: relative; z-index: 1; width: 38px; height: 44px; opacity: 0.5; }
+.seq-thumb.wide { width: 180px; height: 90px; border-radius: 12px; }
 
 .seq-pose-name {
   font-family: var(--font-display);
@@ -1865,7 +1866,7 @@ const SECONDARY = [
 ];
 
 const FINISHING = [
-  { id:'f01', img:'images/poses/s01.png', s:'Urdhva Dhanurasana',     d:'ऊर्ध्व धनुरासन',     e:'Upward Bow / Wheel Pose',   series:'Finishing' },
+  { id:'f01', img:'images/poses/f01_urdhva_dhanurasana_400.png', s:'Urdhva Dhanurasana',     d:'ऊर्ध्व धनुरासन',     e:'Upward Bow / Wheel Pose',   series:'Finishing' },
   { id:'f02', img:'images/poses/f02_salamba_sarvangasana_400.png', s:'Salamba Sarvangasana',   d:'सालम्ब सर्वाङ्गासन', e:'Shoulderstand',   series:'Finishing' },
   { id:'f03', img:'images/poses/f03_halasana_400.png', s:'Halasana',               d:'हलासन',               e:'Plough Pose',               series:'Finishing' },
   { id:'f04', img:'images/poses/f04_karnapidasana_400.png', s:'Karnapidasana',          d:'कर्णपीडासन',          e:'Ear Pressing Pose',         series:'Finishing' },
@@ -2210,7 +2211,7 @@ function renderWNInFC(idx) {
   area.innerHTML = `
     <div class="seq-card" style="margin-bottom:0">
       <div class="seq-given-label">You just completed</div>
-      <div class="seq-thumb" style="overflow:hidden;">${poseThumb(cur, 'small')}</div>
+      <div class="seq-thumb${wideClass(cur)}" style="overflow:hidden;">${poseThumb(cur, 'small')}</div>
       <div class="seq-pose-name">${cur.s}</div>
       <div class="seq-devanagari">${cur.d}</div>
       <div class="seq-english">${engStrPlain(cur)}</div>
@@ -2260,7 +2261,7 @@ function renderWN(idx, reset) {
   area.innerHTML = `
     <div class="seq-card">
       <div class="seq-given-label">You just completed</div>
-      <div class="seq-thumb" style="overflow:hidden;">${poseThumb(cur, 'small')}</div>
+      <div class="seq-thumb${wideClass(cur)}" style="overflow:hidden;">${poseThumb(cur, 'small')}</div>
       <div class="seq-pose-name">${cur.s}</div>
       <div class="seq-devanagari">${cur.d}</div>
       <div class="seq-english">${engStrPlain(cur)}</div>
