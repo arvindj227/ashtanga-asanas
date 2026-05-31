@@ -52,7 +52,7 @@ body {
 }
 
 /* ── Desktop overrides ── */
-@media (min-width: 900px) {
+@media (min-width: 600px) {
   html {
     background: #E0CFC0;
     display: flex;
@@ -60,21 +60,39 @@ body {
     min-height: 100vh;
   }
   body {
-    /* fixed height phone frame, internal scroll per-screen */
     height: 100vh;
     max-height: 100vh;
     overflow: hidden;
-    
-    box-shadow: 0 0 60px rgba(0,0,0,0.18);
+    box-shadow: 0 0 60px rgba(0,0,0,0.15);
     background: var(--cream);
-    display: flex;
-    flex-direction: column;
   }
-  /* welcome screen scrolls internally */
-  #screen-welcome .screen-scroll {
+  /* all screens occupy the same space, inactive ones invisible */
+  .screen {
+    position: absolute !important;
+    top: 0; left: 0; right: 0;
+    height: calc(100vh - 58px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: hidden;
+    pointer-events: none;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .screen.active {
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  .screen-scroll {
+    flex: 1 !important;
     overflow-y: auto !important;
+    height: 0 !important;
+    min-height: 0 !important;
   }
   .bottom-nav {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    border-radius: 0 !important;
     flex-shrink: 0;
   }
 }
@@ -1311,24 +1329,7 @@ body.splashing .bottom-nav { visibility: hidden; }
 /* ════════════════════════════════════
    DESKTOP WRAPPER
 ════════════════════════════════════ */
-@media (min-width: 481px) {
-  body {
-    background: #EAE4DD;
-    align-items: center;
-    justify-content: flex-start;
-  }
-  .screen {
-    border-radius: 38px;
-    overflow: hidden;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.16);
-    max-height: 860px;
-    height: 100dvh;
-    flex: none;
-  }
-  .bottom-nav {
-    border-radius: 0 0 38px 38px;
-  }
-}
+
 
 /* ════════════════════════════════════
    SPLASH SCREEN
@@ -1960,7 +1961,11 @@ function getWNPair() {
 // ─── SCREEN MANAGEMENT ───────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  // Scroll screen-scroll area back to top on tab change
+  const scroll = el.querySelector('.screen-scroll');
+  if (scroll) scroll.scrollTop = 0;
   document.querySelectorAll('.nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.nav === id);
   });
