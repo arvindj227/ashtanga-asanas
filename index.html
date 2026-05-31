@@ -36,8 +36,7 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
-  background: #E0CFC0; /* warm desktop background outside the app frame */
-  min-height: 100%;
+  touch-action: manipulation; /* disable double-tap zoom on mobile */
 }
 
 body {
@@ -50,8 +49,6 @@ body {
   flex-direction: column;
   max-width: 430px;
   margin: 0 auto;
-  box-shadow: 0 0 80px rgba(0,0,0,0.18);
-  /* no border-radius -- clean edges */
 }
 
 /* ── Desktop overrides ── */
@@ -67,7 +64,7 @@ body {
     height: 100vh;
     max-height: 100vh;
     overflow: hidden;
-    border-radius: 0;
+    
     box-shadow: 0 0 60px rgba(0,0,0,0.18);
     background: var(--cream);
     display: flex;
@@ -82,10 +79,11 @@ body {
   }
 }
 
-/* Remove iOS tap flash on all interactive elements */
-button, [data-id], .chip, .mode-card, .nav-btn {
+/* Remove iOS tap flash and double-tap zoom on all interactive elements */
+button, [data-id], .chip, .mode-card, .nav-btn, a, select, input {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 /* ─── GRAIN ─── */
