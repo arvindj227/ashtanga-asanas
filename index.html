@@ -48,41 +48,36 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* phone-frame centering on desktop */
   max-width: 430px;
   margin: 0 auto;
   box-shadow: 0 0 80px rgba(0,0,0,0.18);
+  /* no border-radius -- clean edges */
 }
 
 /* ── Desktop overrides ── */
 @media (min-width: 900px) {
-  html { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-  body {
-    height: auto;
+  html {
+    background: #E0CFC0;
+    display: flex;
+    justify-content: center;
     min-height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+  }
+  body {
+    /* fixed height phone frame, internal scroll per-screen */
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
     border-radius: 0;
-    box-shadow: 2px 0 40px rgba(0,0,0,0.12), -2px 0 40px rgba(0,0,0,0.12);
-    position: relative;
-    background: var(--cream); /* no dark gap at bottom */
+    box-shadow: 0 0 60px rgba(0,0,0,0.18);
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
   }
-  /* on desktop: all screens auto height, body handles scroll */
-  .screen {
-    height: auto !important;
-    min-height: calc(100vh - 58px);
-    overflow: visible !important;
+  /* welcome screen scrolls internally */
+  #screen-welcome .screen-scroll {
+    overflow-y: auto !important;
   }
-  .screen-scroll {
-    overflow: visible !important;
-    flex: none !important;
-    height: auto !important;
-  }
-  /* bottom nav sticks to bottom of the frame */
   .bottom-nav {
-    position: sticky;
-    bottom: 0;
-    z-index: 100;
     flex-shrink: 0;
   }
 }
@@ -592,7 +587,6 @@ body.splashing .bottom-nav { visibility: hidden; }
 /* ── Flashcard ── */
 .flashcard {
   background: var(--white);
-  border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
   animation: flipIn 0.35s cubic-bezier(.22,.68,0,1.15) both;
@@ -863,7 +857,6 @@ body.splashing .bottom-nav { visibility: hidden; }
 ════════════════════════════════════ */
 .seq-card {
   background: var(--white);
-  border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   padding: 22px 20px 18px;
   text-align: center;
@@ -923,7 +916,6 @@ body.splashing .bottom-nav { visibility: hidden; }
 ════════════════════════════════════ */
 .seq-learn-card {
   background: var(--white);
-  border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
   animation: flipIn 0.35s cubic-bezier(.22,.68,0,1.15) both;
@@ -1217,34 +1209,12 @@ body.splashing .bottom-nav { visibility: hidden; }
   animation: fadeUp 0.5s 0.2s ease both;
   box-shadow: var(--shadow-card);
 }
-.btn-share-img {
-  width: 100%;
-  margin-top: 10px;
-  padding: 11px 14px;
-  border-radius: 10px;
-  border: 1.5px solid var(--terra);
-  background: transparent;
-  color: var(--terra);
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  transition: background 0.16s, color 0.16s;
-  -webkit-tap-highlight-color: transparent;
-}
+
 @media (hover: hover) {
-  .btn-share-img:hover { background: var(--terra); color: var(--white); }
+  
 }
-/* hidden by default, shown only on touch devices via JS */
-.btn-share-img { display: none; }
-.is-touch .btn-share-img { display: flex; }
-.btn-share-img.loading { opacity: 0.55; pointer-events: none; }
+
+
 .share-card {
   background: var(--forest);
   border-radius: 10px;
@@ -1716,10 +1686,7 @@ body.splashing .bottom-nav { visibility: hidden; }
           <div class="share-message" id="share-message"></div>
           <div class="share-brand">Ashtanga Asanas</div>
         </div>
-        <button class="btn-share-img" id="btn-share-img">
-          <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><path d="M9 2v10M5 6l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Share result
-        </button>
+
       </div>
       <div class="results-btns">
         <button class="btn-again"  id="btn-again">Practice again</button>
@@ -2402,75 +2369,6 @@ function renderSeq(idx) {
     else renderSeq(0);
   });
 }
-
-
-
-
-// Detect touch device and show share button accordingly
-if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-  document.body.classList.add('is-touch');
-}
-
-// ─── SHARE SCREENSHOT ────────────────────────────────────────────────────────
-const shareBtn = document.getElementById('btn-share-img');
-
-shareBtn.addEventListener('click', async () => {
-  shareBtn.classList.add('loading');
-  shareBtn.textContent = 'Preparing…';
-
-  try {
-    // Dynamically load html2canvas
-    if (!window.html2canvas) {
-      await new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-    }
-
-    // Capture the whole results screen for a richer share image
-    const card = document.getElementById('share-card');
-    const canvas = await html2canvas(card, {
-      scale: 3,
-      backgroundColor: '#2C3E2D',
-      useCORS: true,
-      logging: false,
-    });
-
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], 'ashtanga-result.png', { type: 'image/png' });
-
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        // Native share sheet with image
-        await navigator.share({
-          files: [file],
-          title: 'Ashtanga Asanas',
-        });
-      } else if (navigator.share) {
-        // Share without file (older browsers)
-        await navigator.share({
-          title: 'Ashtanga Asanas',
-          text: `${document.getElementById('share-score').textContent} — ${document.getElementById('share-mode').textContent}`,
-        });
-      } else {
-        // Fallback: download the image
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'ashtanga-result.png';
-        a.click();
-        URL.revokeObjectURL(a.href);
-      }
-    }, 'image/png');
-
-  } catch (err) {
-    if (err.name !== 'AbortError') console.warn('Share failed:', err);
-  } finally {
-    shareBtn.classList.remove('loading');
-    shareBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 18 18" fill="none"><path d="M9 2v10M5 6l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Share result`;
-  }
-});
-
 // Track click parity per lotus element
 const lotusClickState = new WeakMap();
 
