@@ -76,7 +76,7 @@ body {
     flex-direction: column !important;
     visibility: hidden;
     pointer-events: none;
-    overflow: hidden !important;
+    overflow: clip !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
@@ -86,7 +86,7 @@ body {
   }
   .screen-scroll {
     flex: 1 !important;
-    overflow-y: auto !important;
+    overflow-y: scroll !important;
     height: 0 !important;
     min-height: 0 !important;
   }
@@ -132,9 +132,10 @@ body.splashing .bottom-nav { visibility: hidden; }
 /* scrollable content area inside a screen */
 .screen-scroll {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding-bottom: 20px;
 }
 .screen-scroll::-webkit-scrollbar { display: none; }
