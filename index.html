@@ -714,18 +714,19 @@ body.splashing .bottom-nav { visibility: hidden; }
 }
 
 /* ── Answer options (name list) ── */
-.answer-options { display: flex; flex-direction: column; gap: 8px; }
+.answer-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 
 .answer-btn {
   background: var(--white);
   border: 1.5px solid var(--sand);
   border-radius: 14px;
-  padding: 13px 16px;
-  display: flex; align-items: center;
-  gap: 13px;
+  padding: 12px 10px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s;
-  text-align: left;
+  text-align: center;
   box-shadow: 0 1px 6px rgba(0,0,0,0.04);
 }
 @media (hover: hover) {
@@ -748,23 +749,13 @@ body.splashing .bottom-nav { visibility: hidden; }
 }
 .answer-btn.disabled { cursor: default; }
 
-.ans-letter {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: var(--cream);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.72rem; font-weight: 500;
-  color: var(--muted);
-  flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
-}
-.answer-btn.correct .ans-letter { background: #6B9E6E; color: var(--white); }
-.answer-btn.wrong   .ans-letter { background: var(--sand); color: var(--muted); }
 
-.ans-text { flex: 1; }
+
+
+
 .ans-sanskrit {
   font-family: var(--font-display);
-  font-size: 1.1rem; font-weight: 500;
+  font-size: 1rem; font-weight: 500;
   color: var(--ink); line-height: 1.2;
 }
 .answer-btn.correct .ans-sanskrit { color: #3A6B3D; }
@@ -867,6 +858,26 @@ body.splashing .bottom-nav { visibility: hidden; }
   opacity: 1; pointer-events: all;
   animation: fadeUp 0.28s ease both;
 }
+
+.done-card {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 28px 24px;
+  text-align: center;
+  animation: fadeUp 0.3s ease both;
+}
+.done-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem; font-weight: 400;
+  color: var(--ink); margin-bottom: 8px;
+}
+.done-sub {
+  font-size: 0.75rem; font-weight: 400;
+  color: var(--muted); line-height: 1.5;
+  margin-bottom: 20px;
+}
+.done-results-btn { margin-top: 0; }
 .btn-next:hover { background: var(--terra-dark); transform: translateY(-1px); }
 
 /* ════════════════════════════════════
@@ -1926,6 +1937,7 @@ const st = {
   playerName: '', deck: [],
   idx: 0, correct: 0, wrong: 0, answered: false,
   wrongPoses: {}, secCorrect: {}, secTotal: {},
+  lastCompleted: null, completedScreen: null,
   seqSub: 'primary',    // 'primary' | 'secondary' | 'finishing' — for sequence mode
   showEnglish: true,   // whether to show English translations
   lastPose: null,      // id of user's last known pose (null = full series)
@@ -2012,10 +2024,47 @@ function showScreen(id) {
   });
 }
 
+// ─── SESSION DONE INTERSTITIAL ───────────────────────────────────────────
+// Shows a simple end-state if user navigates to a practice tab after finishing
+function isDeckDone(screen) {
+  return st.completedScreen === screen;
+}
+
+function showDoneState(areaId, screenId) {
+  const area = document.getElementById(areaId);
+  area.innerHTML = `
+    <div class="done-card">
+      <div class="done-title">Session complete</div>
+      <div class="done-sub">Start a new practice from the home screen, or review your results.</div>
+      <button class="btn-again done-results-btn" onclick="showResults(); showScreen('screen-results'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === 'screen-results'));">See results</button>
+    </div>
+  `;
+  showScreen(screenId);
+}
+
 // Nav buttons
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.nav;
+
+    // Practice tabs: if deck is done, show interstitial instead of re-rendering
+    if (target === 'screen-practice' && isDeckDone('screen-practice')) {
+      showDoneState('fc-area', 'screen-practice');
+      return;
+    }
+    if (target === 'screen-whatsnext' && isDeckDone('screen-whatsnext')) {
+      showDoneState('wn-area', 'screen-whatsnext');
+      return;
+    }
+    // Reset answered flag only when switching TO a different practice tab
+    // so mid-session questions on the other tab remain clickable
+    const currentActive = document.querySelector('.nav-btn.active');
+    const currentScreen = currentActive ? currentActive.dataset.nav : null;
+    if (currentScreen !== target &&
+        (target === 'screen-practice' || target === 'screen-whatsnext')) {
+      st.answered = false;
+    }
+
     // Only re-render if the screen hasn't been initialised yet
     if (target === 'screen-sequence' && document.getElementById('sq-area').innerHTML === '') {
       renderSeq(0);
@@ -2023,8 +2072,12 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (target === 'screen-whatsnext' && document.getElementById('wn-area').innerHTML === '') {
       renderWN(0, true);
     }
-    // Results: always refresh with current live scores
+    // Results: only if a session has been completed
     if (target === 'screen-results') {
+      if (!st.lastCompleted) {
+        toast(null, 'Complete a session to see your results.');
+        return;
+      }
       showResults();
       return;
     }
@@ -2133,6 +2186,7 @@ document.getElementById('btn-start').addEventListener('click', () => {
   st.deck = buildDeck();
   st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false;
   st.wrongPoses = {}; st.secCorrect = {}; st.secTotal = {};
+  st.completedScreen = null;
   st.wnHistory = [];
 
   if (st.mode === 'flashcard' || st.mode === 'flashcard+whatsnext') {
@@ -2150,15 +2204,16 @@ document.getElementById('btn-start').addEventListener('click', () => {
 // ─── FLASHCARD (also handles mixed mode) ─────────────────────────────────
 function renderFC(idx) {
   const isMixed = st.mode === 'flashcard+whatsnext';
+  const total = st.deck.length;
 
   // In mixed mode, randomly decide if this card is a WN question
-  if (isMixed && Math.random() < 0.4) {
+  // but not on the very last card (would skip completeSession)
+  if (isMixed && idx < total - 1 && Math.random() < 0.4) {
     renderWNInFC(idx);
     return;
   }
 
   const pose = st.deck[idx];
-  const total = st.deck.length;
   st.answered = false;
   st.cardType = Math.random() > 0.5 ? 'image' : 'name';
 
@@ -2194,16 +2249,11 @@ function renderFC(idx) {
       <div class="answer-options" id="fc-opts">
         ${opts.map((o, i) => `
           <button class="answer-btn" data-id="${o.id}" data-correct="${o.id === pose.id}">
-            <div class="ans-letter">${'ABCD'[i]}</div>
-            <div class="ans-text">
-              <div class="ans-sanskrit">${o.s}</div>
+            <div class="ans-sanskrit">${o.s}</div>
               <div class="ans-english">${engStrPlain(o)}</div>
-            </div>
-            <div class="ans-check">&#10003;</div>
-            <div class="ans-x">&#10007;</div>
           </button>`).join('')}
       </div>
-      <button class="btn-next" id="fc-next">Next pose</button>
+      <button class="btn-next" id="fc-next">${idx === total - 1 ? 'Finish' : 'Next pose'}</button>
     `;
   } else {
     // name -> image: DO NOT show names on the image options
@@ -2222,13 +2272,13 @@ function renderFC(idx) {
             <div class="image-opt-label">${o.s}</div>
           </button>`).join('')}
       </div>
-      <button class="btn-next" id="fc-next">Next pose</button>
+      <button class="btn-next" id="fc-next">${idx === total - 1 ? 'Finish' : 'Next pose'}</button>
     `;
   }
 
   bindAnswers('fc-opts', pose, 'fc-correct', 'fc-wrong', 'fc-next', () => {
     st.idx = idx + 1;
-    if (st.idx >= total) showResults();
+    if (st.idx >= total) completeSession('screen-practice');
     else renderFC(st.idx);
   });
 }
@@ -2260,28 +2310,23 @@ function renderWNInFC(idx) {
     <div class="answer-options" id="fc-opts">
       ${opts.map((o, i) => `
         <button class="answer-btn" data-id="${o.id}" data-correct="${o.id === next.id}">
-          <div class="ans-letter">${'ABCD'[i]}</div>
-          <div class="ans-text">
             <div class="ans-sanskrit">${o.s}</div>
             <div class="ans-english">${engStrPlain(o)}</div>
-          </div>
-          <div class="ans-check">&#10003;</div>
-          <div class="ans-x">&#10007;</div>
-        </button>`).join('')}
+          </button>`).join('')}
     </div>
-    <button class="btn-next" id="fc-next">Next</button>
+    <button class="btn-next" id="fc-next">${idx === total - 1 ? 'Finish' : 'Next'}</button>
   `;
 
   bindAnswers('fc-opts', next, 'fc-correct', 'fc-wrong', 'fc-next', () => {
     st.idx = idx + 1;
-    if (st.idx >= total) showResults();
+    if (st.idx >= total) completeSession('screen-practice');
     else renderFC(st.idx);
   });
 }
 
 // ─── WHAT'S NEXT ─────────────────────────────────────────────────────────
 function renderWN(idx, reset) {
-  if (reset) { st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.wrongPoses = {}; st.secCorrect = {}; st.secTotal = {}; st.wnHistory = []; }
+  if (reset) { st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.wrongPoses = {}; st.secCorrect = {}; st.secTotal = {}; st.completedScreen = null; st.wnHistory = []; }
   const total = 20;
   st.answered = false;
 
@@ -2310,21 +2355,16 @@ function renderWN(idx, reset) {
     <div class="answer-options" id="wn-opts">
       ${opts.map((o, i) => `
         <button class="answer-btn" data-id="${o.id}" data-correct="${o.id === next.id}">
-          <div class="ans-letter">${'ABCD'[i]}</div>
-          <div class="ans-text">
             <div class="ans-sanskrit">${o.s}</div>
             <div class="ans-english">${engStrPlain(o)}</div>
-          </div>
-          <div class="ans-check">&#10003;</div>
-          <div class="ans-x">&#10007;</div>
-        </button>`).join('')}
+          </button>`).join('')}
     </div>
-    <button class="btn-next" id="wn-next">Next question</button>
+    <button class="btn-next" id="wn-next">${idx === total - 1 ? 'Finish' : 'Next question'}</button>
   `;
 
   bindAnswers('wn-opts', next, 'wn-correct', 'wn-wrong', 'wn-next', () => {
     const nxt = idx + 1;
-    if (nxt >= total) showResults();
+    if (nxt >= total) completeSession('screen-whatsnext');
     else renderWN(nxt, false);
   });
 }
@@ -2531,11 +2571,27 @@ document.querySelectorAll('.seq-sub-chip').forEach(chip => {
 });
 
 // ─── RESULTS ─────────────────────────────────────────────────────────────
+function completeSession(screen) {
+  st.completedScreen = screen || null;
+  st.lastCompleted = {
+    mode: st.mode, series: st.series,
+    correct: st.correct, wrong: st.wrong,
+    playerName: st.playerName,
+    wrongPoses: { ...st.wrongPoses },
+    secCorrect: { ...st.secCorrect },
+    secTotal:   { ...st.secTotal },
+  };
+  const navBtn = document.getElementById('nav-results');
+  if (navBtn) navBtn.classList.remove('nav-disabled');
+  showResults();
+}
+
 function showResults() {
-  const isSeq    = st.mode === 'sequence';
-  const answered = st.correct + st.wrong;
-  const pct      = answered > 0 ? Math.round((st.correct / answered) * 100) : 0;
-  const name     = st.playerName || 'Yogi';
+  const src      = st.lastCompleted || st;
+  const isSeq    = src.mode === 'sequence';
+  const answered = src.correct + src.wrong;
+  const pct      = answered > 0 ? Math.round((src.correct / answered) * 100) : 0;
+  const name     = src.playerName || 'Yogi';
   const modeMap  = { flashcard:'Flashcards', whatsnext:"What's Next", 'flashcard+whatsnext':'Mixed', sequence:'Sequence' };
   const seriesMap = { primary:'Primary Series', secondary:'Secondary Series', both:'Primary and Secondary' };
 
@@ -2549,6 +2605,8 @@ function showResults() {
     document.getElementById('res-pct').textContent     = '—';
     document.getElementById('results-quote-row').style.display = 'none';
     document.getElementById('share-section').style.display = 'none';
+    const navBtnSeq = document.getElementById('nav-results');
+    if (navBtnSeq) navBtnSeq.classList.remove('nav-disabled');
     showScreen('screen-results');
     return;
   }
@@ -2567,8 +2625,8 @@ function showResults() {
 
   document.getElementById('results-title').innerHTML =
     st.playerName ? `Well<br>done, <em>${st.playerName}</em>` : `Well<br>done, <em>Yogi</em>`;
-  document.getElementById('res-correct').textContent = st.correct;
-  document.getElementById('res-wrong').textContent   = st.wrong;
+  document.getElementById('res-correct').textContent = src.correct;
+  document.getElementById('res-wrong').textContent   = src.wrong;
   document.getElementById('res-pct').textContent     = `${pct}%`;
 
   // Messages shared across all tiers — always in the pool
@@ -2617,11 +2675,11 @@ function showResults() {
   document.getElementById('results-quote-text').textContent = shareMsg;
 
   // Mode subtitle on green card
-  document.getElementById('share-mode').textContent = `${modeMap[st.mode]} · ${seriesMap[st.series]} · ${answered} cards`;
+  document.getElementById('share-mode').textContent = `${modeMap[src.mode]} · ${seriesMap[src.series]} · ${answered} cards`;
 
   // Missed poses chips (cap at 6)
   const allPoses = [...PRIMARY, ...SECONDARY, ...FINISHING];
-  const missedIds = Object.entries(st.wrongPoses || {})
+  const missedIds = Object.entries(src.wrongPoses || {})
     .filter(([,v]) => v > 0)
     .sort((a, b) => b[1] - a[1])
     .map(([id]) => id);
@@ -2653,9 +2711,9 @@ function showResults() {
   const barsEl = document.getElementById('share-bars');
   barsEl.innerHTML = '';
   sections.forEach(sec => {
-    const total = st.secTotal[sec.key] || 0;
+    const total = src.secTotal[sec.key] || 0;
     if (total === 0) return;
-    const correct = st.secCorrect[sec.key] || 0;
+    const correct = src.secCorrect[sec.key] || 0;
     const pctSec = Math.round((correct / total) * 100);
     const row = document.createElement('div');
     row.className = 'share-bar-item';
@@ -2671,7 +2729,7 @@ function showResults() {
 }
 
 document.getElementById('btn-again').addEventListener('click', () => {
-  st.deck = buildDeck(); st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.wrongPoses = {}; st.secCorrect = {}; st.secTotal = {};
+  st.deck = buildDeck(); st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.wrongPoses = {}; st.secCorrect = {}; st.secTotal = {}; st.completedScreen = null;
   if (st.mode === 'flashcard' || st.mode === 'flashcard+whatsnext') {
     renderFC(0); showScreen('screen-practice');
   } else if (st.mode === 'whatsnext') {
