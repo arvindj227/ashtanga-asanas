@@ -2157,6 +2157,7 @@ const nameInputRow = nameCheckBtn.parentElement;
 // Show/hide the check button as user types
 nameInput.addEventListener('input', () => {
   nameCheckBtn.classList.toggle('show', nameInput.value.trim().length > 0);
+  st.playerName = nameInput.value.trim();
 });
 
 function commitName() {
@@ -2594,7 +2595,7 @@ function showResults() {
   const isSeq    = src.mode === 'sequence';
   const answered = src.correct + src.wrong;
   const pct      = answered > 0 ? Math.round((src.correct / answered) * 100) : 0;
-  const name     = src.playerName || 'Yogi';
+  const name     = st.playerName || 'Yogi';
   const modeMap  = { flashcard:'Flashcards', whatsnext:"What's Next", 'flashcard+whatsnext':'Mixed', sequence:'Sequence' };
   const seriesMap = { primary:'Primary Series', secondary:'Secondary Series', both:'Primary and Secondary' };
 
