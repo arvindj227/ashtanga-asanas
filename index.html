@@ -50,6 +50,20 @@ body {
   flex-direction: column;
   max-width: 430px;
   margin: 0 auto;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection on pose names and Sanskrit text */
+.seq-learn-sanskrit, .seq-learn-devanagari, .seq-learn-english,
+.seq-pose-name, .seq-devanagari, .seq-english,
+.ans-sanskrit, .ans-english,
+.flashcard-sanskrit, .flashcard-devanagari, .flashcard-english,
+.pose-label, .pose-sublabel,
+.seq-fb-name, .seq-fb-eng,
+.results-title, .results-quote {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* ── Desktop overrides ── */
@@ -1183,6 +1197,76 @@ body.splashing .bottom-nav { visibility: hidden; }
   color: var(--muted);
 }
 
+.pool-card {
+  border: 1px solid var(--sand);
+  border-radius: 13px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.pool-row {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--sand);
+  position: relative;
+}
+.pool-row:last-child { border-bottom: none; }
+.pool-row-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.pool-row .range-select {
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  border-radius: 0;
+  background: transparent;
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+.pool-row .range-select:focus { box-shadow: none; }
+.pool-row .range-select-arrow {
+  display: none;
+}
+.finishing-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.finishing-lbl-main {
+  font-size: 0.8rem;
+  color: var(--ink);
+  font-weight: 400;
+}
+.finishing-lbl-sub {
+  font-size: 0.63rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.toggle-switch-sm {
+  width: 34px; height: 20px;
+  border-radius: 10px;
+  background: var(--sand);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.toggle-switch-sm.active { background: var(--terra); }
+.toggle-switch-sm .toggle-knob-sm {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-switch-sm.active .toggle-knob-sm { transform: translateX(14px); }
+
 /* ── English toggle ── */
 .toggle-row {
   display: flex;
@@ -1621,14 +1705,27 @@ body.splashing .bottom-nav { visibility: hidden; }
         <button class="chip" data-series="both">Both</button>
       </div>
 
-      <label class="range-label" for="range-select">Practice up to</label>
-      <div class="range-picker-wrap">
-        <select class="range-select" id="range-select">
-          <option value="">Full series</option>
-        </select>
-        <svg class="range-select-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <div class="pool-card">
+        <div class="pool-row">
+          <div class="pool-row-label">Practice up to</div>
+          <select class="range-select" id="range-select">
+            <option value="">Full series</option>
+          </select>
+          <svg class="range-select-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="pool-row">
+          <div class="finishing-toggle-row">
+            <div>
+              <div class="finishing-lbl-main">Include finishing sequence</div>
+              <div class="finishing-lbl-sub">15 poses · appended at end</div>
+            </div>
+            <button class="toggle-switch-sm" id="toggle-finishing" aria-pressed="false">
+              <span class="toggle-knob-sm"></span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <p class="pick-label">Mode</p>
@@ -1915,8 +2012,8 @@ document.addEventListener('error', function(e) {
 // Flagged entries marked with flag:true for later verification
 const PRIMARY = [
   { id:'p01', img:'images/poses/samasthiti_400.png', s:'Samasthitiḥ',                    d:'समस्थिति',                       e:'Equal Standing',                series:'Primary' },
-  { id:'p02', img:'images/poses/suryanamaskar_a_400.png',  wide:true,wide:true, s:'Sūrya Namaskāra A',              d:'सूर्य नमस्कार अ',               e:'Sun Salutation A',              series:'Primary' },
-  { id:'p03', img:'images/poses/suryanamaskar_b_400.png',  wide:true,wide:true, s:'Sūrya Namaskāra B',              d:'सूर्य नमस्कार ब',               e:'Sun Salutation B',              series:'Primary' },
+  { id:'p02', img:'images/poses/suryanamaskar_a_400.png',  wide:true, s:'Sūrya Namaskāra A',              d:'सूर्य नमस्कार अ',               e:'Sun Salutation A',              series:'Primary' },
+  { id:'p03', img:'images/poses/suryanamaskar_b_400.png',  wide:true, s:'Sūrya Namaskāra B',              d:'सूर्य नमस्कार ब',               e:'Sun Salutation B',              series:'Primary' },
   { id:'p04', s:'Pādānguṣṭhāsana', img:'images/poses/001_padangusthasana_400.png',                d:'पादाङ्गुष्ठासन',                e:'Big Toe Pose',                  series:'Primary' },
   { id:'p05', s:'Pāda Hastāsana', img:'images/poses/002_padahastasana_400.png',                  d:'पादहस्तासन',                    e:'Hand Under Foot Pose',          series:'Primary' },
   { id:'p06', img:'images/poses/003_utthita_trikonasana_400.png', s:'Utthita Trikoṇāsana',            d:'उत्थित त्रिकोणासन',             e:'Extended Triangle Pose',        series:'Primary' },
@@ -1964,39 +2061,36 @@ const PRIMARY = [
 ];
 
 const SECONDARY = [
-  { id:'s01', s:'Pashasana',              d:'पाशासन',             e:'Noose Pose',                series:'Secondary' },
-  { id:'s02', s:'Krounchasana',           d:'क्रौञ्चासन',         e:'Heron Pose',                series:'Secondary' },
-  { id:'s03', s:'Shalabhasana A',         d:'शलभासन अ',           e:'Locust Pose A',             series:'Secondary' },
-  { id:'s04', s:'Shalabhasana B',         d:'शलभासन ब',           e:'Locust Pose B',             series:'Secondary' },
-  { id:'s05', s:'Bhekasana',              d:'भेकासन',             e:'Frog Pose',                 series:'Secondary' },
-  { id:'s06', s:'Dhanurasana',            d:'धनुरासन',            e:'Bow Pose',                  series:'Secondary' },
-  { id:'s07', s:'Parsva Dhanurasana',     d:'पार्श्व धनुरासन',    e:'Side Bow Pose',             series:'Secondary' },
-  { id:'s08', s:'Ustrasana',              d:'उष्ट्रासन',          e:'Camel Pose',                series:'Secondary' },
-  { id:'s09', s:'Laghu Vajrasana',        d:'लघु वज्रासन',        e:'Little Thunderbolt Pose',   series:'Secondary' },
-  { id:'s10', s:'Kapotasana A',           d:'कपोतासन अ',          e:'Pigeon Pose A',             series:'Secondary' },
-  { id:'s11', s:'Kapotasana B',           d:'कपोतासन ब',          e:'Pigeon Pose B',             series:'Secondary' },
-  { id:'s12', s:'Supta Vajrasana',        d:'सुप्त वज्रासन',      e:'Reclining Thunderbolt',     series:'Secondary' },
-  { id:'s13', s:'Bakasana A',             d:'बकासन अ',            e:'Crane Pose A',              series:'Secondary' },
-  { id:'s14', s:'Bakasana B',             d:'बकासन ब',            e:'Crane Pose B',              series:'Secondary' },
-  { id:'s15', s:'Bharadvajasana',         d:'भरद्वाजासन',         e:'Bharadvaja Twist',          series:'Secondary' },
-  { id:'s16', s:'Ardha Matsyendrasana',   d:'अर्ध मत्स्येन्द्रासन', e:'Half Lord of the Fishes', series:'Secondary' },
-  { id:'s17', s:'Eka Pada Sirsasana',     d:'एक पाद शीर्षासन',    e:'One Foot Behind Head',      series:'Secondary' },
-  { id:'s18', s:'Dwi Pada Sirsasana',     d:'द्वि पाद शीर्षासन',  e:'Both Feet Behind Head',     series:'Secondary' },
-  { id:'s19', s:'Yoga Nidrasana',         d:'योग निद्रासन',        e:'Yoga Sleep Pose',           series:'Secondary' },
-  { id:'s20', s:'Tittibhasana A',         d:'टिट्टिभासन अ',       e:'Firefly Pose A',            series:'Secondary' },
-  { id:'s21', s:'Tittibhasana B',         d:'टिट्टिभासन ब',       e:'Firefly Pose B',            series:'Secondary' },
-  { id:'s22', s:'Tittibhasana C',         d:'टिट्टिभासन च',       e:'Firefly Pose C',            series:'Secondary' },
-  { id:'s23', s:'Pincha Mayurasana',      d:'पिञ्च मयूरासन',      e:'Feathered Peacock Pose',    series:'Secondary' },
-  { id:'s24', s:'Karandavasana',          d:'कारण्डवासन',         e:'Duck Pose',                 series:'Secondary' },
-  { id:'s25', s:'Mayurasana',             d:'मयूरासन',            e:'Peacock Pose',              series:'Secondary' },
-  { id:'s26', s:'Nakrasana',              d:'नक्रासन',            e:'Crocodile Pose',            series:'Secondary' },
-  { id:'s27', s:'Vatayanasana',           d:'वातायनासन',          e:'Horse Pose',                series:'Secondary' },
-  { id:'s28', s:'Parighasana',            d:'परिघासन',            e:'Gate Pose',                 series:'Secondary' },
-  { id:'s29', s:'Gomukhasana A',          d:'गोमुखासन अ',         e:'Cow Face Pose A',           series:'Secondary' },
-  { id:'s30', s:'Gomukhasana B',          d:'गोमुखासन ब',         e:'Cow Face Pose B',           series:'Secondary' },
-  { id:'s31', s:'Supta Urdhva Pada Vajrasana', d:'सुप्त ऊर्ध्व पाद वज्रासन', e:'Reclining Upward Leg Thunderbolt', series:'Secondary', flag:true },
-  { id:'s32', s:'Mukta Hasta Sirsasana A', d:'मुक्त हस्त शीर्षासन अ', e:'Free Hands Headstand A', series:'Secondary' },
-  { id:'s33', s:'Baddha Hasta Sirsasana A', d:'बद्ध हस्त शीर्षासन अ', e:'Bound Hands Headstand A', series:'Secondary' },
+  { id:'s01', s:'Pāśāsana',                         d:'पाशासन',                         e:'Noose Pose',                         series:'Secondary', img:'images/poses/s01_pashasana_400.png' },
+  { id:'s02', s:'Kroñcāsana',                        d:'क्रौञ्चासन',                     e:'Heron Pose',                         series:'Secondary', img:'images/poses/s02_krounchasana_400.png' },
+  { id:'s03', s:'Śalabhāsana A',                     d:'शलभासन अ',                       e:'Locust Pose A',                      series:'Secondary', img:'images/poses/s03_shalabhasana_a_400.png' },
+  { id:'s04', s:'Śalabhāsana B',                     d:'शलभासन ब',                       e:'Locust Pose B',                      series:'Secondary', img:'images/poses/s04_shalabhasana_b_400.png' },
+  { id:'s05', s:'Bhekāsana',                         d:'भेकासन',                         e:'Frog Pose',                          series:'Secondary', img:'images/poses/s05_bhekasana_400.png' },
+  { id:'s06', s:'Dhanurāsana',                       d:'धनुरासन',                        e:'Bow Pose',                           series:'Secondary', img:'images/poses/s06_dhanurasana_400.png' },
+  { id:'s07', s:'Pārśva Dhanurāsana',                d:'पार्श्व धनुरासन',                e:'Side Bow Pose',                      series:'Secondary', img:'images/poses/s07_parsva_dhanurasana_400.png' },
+  { id:'s08', s:'Uṣṭrāsana',                         d:'उष्ट्रासन',                      e:'Camel Pose',                         series:'Secondary', img:'images/poses/s08_ustrasana_400.png' },
+  { id:'s09', s:'Laghu Vajrāsana',                   d:'लघु वज्रासन',                    e:'Little Thunderbolt Pose',            series:'Secondary', img:'images/poses/s09_laghu_vajrasana_400.png' },
+  { id:'s10', s:'Kapotāsana A',                      d:'कपोतासन अ',                      e:'Pigeon Pose A',                      series:'Secondary', img:'images/poses/s10_kapotasana_a_400.png' },
+  { id:'s11', s:'Kapotāsana B',                      d:'कपोतासन ब',                      e:'Pigeon Pose B',                      series:'Secondary', img:'images/poses/s11_kapotasana_b_400.png' },
+  { id:'s12', s:'Supta Vajrāsana',                   d:'सुप्त वज्रासन',                  e:'Reclining Thunderbolt',              series:'Secondary' },
+  { id:'s13', s:'Bakāsana',                          d:'बकासन',                          e:'Crane Pose',                         series:'Secondary', img:'images/poses/s13_bakasana_400.png', wide:true },
+  { id:'s14', s:'Bharadvājāsana',                    d:'भरद्वाजासन',                     e:"Bharadvāja's Twist",                 series:'Secondary', img:'images/poses/s14_bharadvajasana_400.png' },
+  { id:'s15', s:'Ardha Matsyendrāsana',              d:'अर्ध मत्स्येन्द्रासन',           e:'Half Lord of the Fishes',            series:'Secondary', img:'images/poses/s15_ardha_matsyendrasana_400.png' },
+  { id:'s16', s:'Ekapāda Śīrṣāsana',                d:'एक पाद शीर्षासन',                e:'One Foot Behind Head',               series:'Secondary', img:'images/poses/s16_eka_pada_sirsasana_400.png', wide:true },
+  { id:'s17', s:'Dvi Pāda Śīrṣāsana',               d:'द्वि पाद शीर्षासन',              e:'Both Feet Behind Head',              series:'Secondary', img:'images/poses/s17_dwi_pada_sirsasana_400.png', wide:true },
+  { id:'s18', s:'Yoga Nidrāsana',                    d:'योग निद्रासन',                   e:'Yoga Sleep Pose',                    series:'Secondary', img:'images/poses/s18_yoga_nidrasana_400.png' },
+  { id:'s19', s:'Ṭiṭṭibhāsana A, B & C',            d:'टिट्टिभासन अ, ब व च',            e:'Firefly Pose A, B & C',              series:'Secondary', img:'images/poses/s19_tittibhasana_abc_400.png', wide:true },
+  { id:'s20', s:'Pinca Mayūrāsana',                  d:'पिञ्च मयूरासन',                  e:'Feathered Peacock Pose',             series:'Secondary', img:'images/poses/s20_pincha_mayurasana_400.png' },
+  { id:'s21', s:'Karāṇḍavāsana',                    d:'कारण्डवासन',                     e:'Duck Pose',                          series:'Secondary', img:'images/poses/s21_karandavasana_400.png' },
+  { id:'s22', s:'Mayūrāsana',                        d:'मयूरासन',                        e:'Peacock Pose',                       series:'Secondary', img:'images/poses/s22_mayurasana_400.png' },
+  { id:'s23', s:'Nakrāsana',                         d:'नक्रासन',                        e:'Crocodile Pose',                     series:'Secondary', img:'images/poses/s23_nakrasana_400.png' },
+  { id:'s24', s:'Vātāyanāsana',                      d:'वातायनासन',                      e:'Horse Pose',                         series:'Secondary', img:'images/poses/s24_vatayanasana_400.png' },
+  { id:'s25', s:'Parighāsana',                       d:'परिघासन',                        e:'Gate Pose',                          series:'Secondary', img:'images/poses/s25_parighasana_400.png' },
+  { id:'s26', s:'Gomukhāsana A',                     d:'गोमुखासन अ',                     e:'Cow Face Pose A',                    series:'Secondary', img:'images/poses/s26_gomukhasana_a_400.png' },
+  { id:'s27', s:'Gomukhāsana B',                     d:'गोमुखासन ब',                     e:'Cow Face Pose B',                    series:'Secondary', img:'images/poses/s27_gomukhasana_b_400.png' },
+  { id:'s28', s:'Supta Ūrdhva Pāda Vajrāsana',      d:'सुप्त ऊर्ध्व पाद वज्रासन',      e:'Reclining Upward Leg Thunderbolt',   series:'Secondary', img:'images/poses/s28_supta_urdhva_pada_vajrasana_400.png', wide:true },
+  { id:'s29', s:'Mukta Hasta Śīrṣāsana A, B & C',   d:'मुक्त हस्त शीर्षासन अ, ब व च',  e:'Free Hands Headstand A, B & C',      series:'Secondary', img:'images/poses/s29_mukta_hasta_sirsasana_abc_400.png', wide:true },
+  { id:'s30', s:'Baddha Hasta Śīrṣāsana A, B, C & D', d:'बद्ध हस्त शीर्षासन अ, ब, च व ड', e:'Bound Hands Headstand A, B, C & D', series:'Secondary', img:'images/poses/s30_baddha_hasta_sirsasana_abcd_400.png', wide:true },
 ];
 
 const FINISHING = [
@@ -2026,10 +2120,10 @@ const st = {
   wrongPoses: {}, secCorrect: {}, secTotal: {},
   lastCompleted: null, completedScreen: null,
   seqSub: 'primary',    // 'primary' | 'secondary' | 'finishing' — for sequence mode
+  includeFinishing: false,  // whether to append finishing poses to the pool
   showEnglish: true,   // whether to show English translations
   lastPose: null,      // id of user's last known pose (null = full series)
   // For mixed mode: track which sub-mode this card uses
-  cardMode: 'flashcard', // 'flashcard' or 'whatsnext'
   cardType: 'image',     // 'image' or 'name' (for flashcard sub-mode)
   wnHistory: [],         // track used (currentId) for what's next to avoid repeats
 };
@@ -2063,7 +2157,7 @@ function getPool() {
     // both: all primary + secondary up to cutoff
     p = PRIMARY.filter(x => !x.skip).concat(sliceToLast(SECONDARY));
   }
-  p = p.concat(FINISHING.filter(x => !x.skip));
+  if (st.includeFinishing) p = p.concat(FINISHING.filter(x => !x.skip));
   return p;
 }
 
@@ -2087,15 +2181,18 @@ function getWNPair() {
     const i = Math.floor(Math.random() * (series.length - 2));
     const cur  = series[i];
     const next = series[i + 1];
-    // Extract base name (remove trailing " A", " B", " C", " D")
-    const baseCur  = cur.s.replace(/\s+[A-D]$/, '');
-    const baseNext = next.s.replace(/\s+[A-D]$/, '');
     // Skip if same base name (e.g. Janu Sirsasana A -> B is too obvious)
+    const baseCur  = cur.s.replace(/\s+[A-D,&]+.*$/, '').trim();
+    const baseNext = next.s.replace(/\s+[A-D,&]+.*$/, '').trim();
     if (baseCur === baseNext) continue;
-    return { cur, next, seriesPool: series };
+    // Avoid recently used cur poses (last 3)
+    if (st.wnHistory.length >= 3 && st.wnHistory.slice(-3).includes(cur.id)) continue;
+    st.wnHistory.push(cur.id);
+    if (st.wnHistory.length > 6) st.wnHistory.shift();
+    return { cur, next, seriesPool: series.filter(p => p.id !== cur.id) };
   }
   // Fallback: just pick index 0
-  return { cur: series[0], next: series[1], seriesPool: series };
+  return { cur: series[0], next: series[1], seriesPool: series.filter(p => p.id !== series[0].id) };
 }
 
 // ─── SCREEN MANAGEMENT ───────────────────────────────────────────────────
@@ -2132,17 +2229,7 @@ function isDeckDone(screen) {
   return st.completedScreen === screen;
 }
 
-function showDoneState(areaId, screenId) {
-  const area = document.getElementById(areaId);
-  area.innerHTML = `
-    <div class="done-card">
-      <div class="done-title">Session complete</div>
-      <div class="done-sub">Start a new practice from the home screen, or review your results.</div>
-      <button class="btn-again done-results-btn" onclick="showResults(); showScreen('screen-results'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === 'screen-results'));">See results</button>
-    </div>
-  `;
-  showScreen(screenId);
-}
+
 
 // Nav buttons
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -2151,11 +2238,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 
     // Practice tabs: if deck is done, show interstitial instead of re-rendering
     if (target === 'screen-practice' && isDeckDone('screen-practice')) {
-      showDoneState('fc-area', 'screen-practice');
+      showScreen('screen-practice');
       return;
     }
     if (target === 'screen-whatsnext' && isDeckDone('screen-whatsnext')) {
-      showDoneState('wn-area', 'screen-whatsnext');
+      showScreen('screen-whatsnext');
       return;
     }
     // Only re-render if the screen hasn't been initialised yet
@@ -2208,10 +2295,10 @@ const ICON_ERR = `<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="
 function toast(ok, main, sub) {
   const el = document.getElementById('toast');
   el.classList.remove('show', 't-correct', 't-wrong');
-  document.getElementById('toast-icon').innerHTML = ok ? ICON_OK : ICON_ERR;
+  document.getElementById('toast-icon').innerHTML = ok === true ? ICON_OK : ok === false ? ICON_ERR : '';
   document.getElementById('toast-main').textContent = main;
   document.getElementById('toast-sub').textContent  = sub || '';
-  el.classList.add(ok ? 't-correct' : 't-wrong');
+  if (ok !== null) el.classList.add(ok ? 't-correct' : 't-wrong');
   clearTimeout(toastTimer);
   requestAnimationFrame(() => {
     el.classList.add('show');
@@ -2551,6 +2638,7 @@ function bindAnswers(optContainerId, correctPose, correctId, wrongId, nextBtnId,
       });
 
       const secKey = FINISHING.find(p => p.id === correctPose.id) ? 'finishing'
+        : SECONDARY.find(p => p.id === correctPose.id) ? 'secondary'
         : ['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19'].includes(correctPose.id) ? 'standing' : 'seated';
 
       if (isOk) {
@@ -2671,7 +2759,7 @@ function renderSeq(idx) {
       <div class="seq-learn-bottom">
         <div class="seq-nav">
           <button class="btn-seq-prev" id="sq-prev" ${idx === 0 ? 'disabled' : ''}>&#8592; Previous</button>
-          <button class="btn-seq-next" id="sq-next">${idx === total - 1 ? 'Done &#10003;' : 'Next &#8594;'}</button>
+          <button class="btn-seq-next" id="sq-next">${idx === total - 1 ? 'Start over &#8635;' : 'Next &#8594;'}</button>
         </div>
       </div>
     </div>
@@ -2679,7 +2767,6 @@ function renderSeq(idx) {
 
   document.getElementById('sq-prev')?.addEventListener('click', () => { if (idx > 0) renderSeq(idx - 1); });
   document.getElementById('sq-next')?.addEventListener('click', () => {
-    // No score tracking in sequence mode — just loop back to start when done
     if (idx < total - 1) renderSeq(idx + 1);
     else renderSeq(0);
   });
@@ -2817,6 +2904,14 @@ rangeSelect.addEventListener('change', () => {
   st.lastPose = rangeSelect.value || null;
 });
 
+// Finishing toggle
+const finishingToggle = document.getElementById('toggle-finishing');
+finishingToggle.addEventListener('click', () => {
+  st.includeFinishing = !st.includeFinishing;
+  finishingToggle.classList.toggle('active', st.includeFinishing);
+  finishingToggle.setAttribute('aria-pressed', st.includeFinishing);
+});
+
 // Re-populate when series changes
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
@@ -2859,6 +2954,29 @@ function completeSession(screen) {
   };
   const navBtn = document.getElementById('nav-results');
   if (navBtn) navBtn.classList.remove('nav-disabled');
+  // Immediately render done state into the area so returning to the tab always shows it
+  if (screen === 'screen-practice') {
+    const area = document.getElementById('fc-area');
+    if (area) area.innerHTML = `
+      <div class="done-card">
+        <div class="done-title">Session complete</div>
+        <div class="done-sub">Start a new practice from the home screen, or review your results.</div>
+        <button class="btn-again done-results-btn" onclick="showResults(); showScreen('screen-results'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === 'screen-results'));">See results</button>
+      </div>`;
+    const slot = document.getElementById('fc-next-slot');
+    if (slot) { slot.classList.add('no-transition'); slot.classList.remove('visible'); }
+  }
+  if (screen === 'screen-whatsnext') {
+    const area = document.getElementById('wn-area');
+    if (area) area.innerHTML = `
+      <div class="done-card">
+        <div class="done-title">Session complete</div>
+        <div class="done-sub">Start a new practice from the home screen, or review your results.</div>
+        <button class="btn-again done-results-btn" onclick="showResults(); showScreen('screen-results'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === 'screen-results'));">See results</button>
+      </div>`;
+    const slot = document.getElementById('wn-next-slot');
+    if (slot) { slot.classList.add('no-transition'); slot.classList.remove('visible'); }
+  }
   showResults();
 }
 
@@ -2982,9 +3100,10 @@ function showResults() {
 
   // Score by section bars
   const sections = [
-    { name: 'Standing', key: 'standing' },
-    { name: 'Seated',   key: 'seated' },
-    { name: 'Finishing',key: 'finishing' },
+    { name: 'Standing',  key: 'standing' },
+    { name: 'Seated',    key: 'seated' },
+    { name: 'Secondary', key: 'secondary' },
+    { name: 'Finishing', key: 'finishing' },
   ];
   const barsEl = document.getElementById('share-bars');
   barsEl.innerHTML = '';
