@@ -162,12 +162,15 @@ body.splashing .bottom-nav { visibility: hidden; }
   height: var(--nav-h);
   background: var(--forest);
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
+  padding-top: 8px;
   flex-shrink: 0;
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
   border-top: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: content-box;
 }
 
 .nav-btn {
