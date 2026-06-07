@@ -1,6 +1,6 @@
 {
   "name": "Ashtanga Asanas",
-  "short_name": "Ashtanga Asanas",
+  "short_name": "Ashtanga",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,9 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  "theme_color": "#2C3E2D",
+  "background_color": "#2C3E2D",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/"
 }
