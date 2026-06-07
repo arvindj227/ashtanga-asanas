@@ -1269,6 +1269,80 @@ body.splashing .bottom-nav { visibility: hidden; }
 }
 .toggle-switch-sm.active .toggle-knob-sm { transform: translateX(14px); }
 
+.breath-strip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--sand);
+}
+.breath-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.breath-count {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--terra);
+}
+.breath-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  flex: 1;
+}
+
+.review-row-wrap {
+  padding: 0 0 12px;
+}
+.revisit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--sand);
+  background: var(--cream);
+  margin-bottom: 8px;
+}
+.revisit-row-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.missed-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8B3A2A;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.revisit-row-text {
+  font-size: 0.76rem;
+  color: var(--ink);
+  font-weight: 400;
+}
+.revisit-row-hint {
+  font-size: 0.63rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.btn-revisit-go {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(139,58,42,0.3);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #8B3A2A;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── English toggle ── */
 .toggle-row {
   display: flex;
@@ -1923,6 +1997,18 @@ body.splashing .bottom-nav { visibility: hidden; }
         </div>
 
       </div>
+      <div id="review-section" style="display:none;" class="review-row-wrap">
+        <div class="revisit-row" id="review-card">
+          <div class="revisit-row-left">
+            <div class="missed-dot"></div>
+            <div>
+              <div class="revisit-row-text" id="review-sub"></div>
+              <div class="revisit-row-hint">Practice only these next</div>
+            </div>
+          </div>
+          <button class="btn-revisit-go" id="btn-review-practice">Go →</button>
+        </div>
+      </div>
       <div class="results-btns">
         <button class="btn-again"  id="btn-again">Practice again</button>
         <button class="btn-change" id="btn-change">Change settings</button>
@@ -2013,86 +2099,86 @@ document.addEventListener('error', function(e) {
 // ─── POSE DATA ────────────────────────────────────────────────────────────
 // Flagged entries marked with flag:true for later verification
 const PRIMARY = [
-  { id:'p01', img:'images/poses/samasthiti_400.png', s:'Samasthitiḥ',                    d:'समस्थिति',                       e:'Equal Standing',                series:'Primary' },
-  { id:'p02', img:'images/poses/suryanamaskar_a_400.png',  wide:true, s:'Sūrya Namaskāra A',              d:'सूर्य नमस्कार अ',               e:'Sun Salutation A',              series:'Primary' },
-  { id:'p03', img:'images/poses/suryanamaskar_b_400.png',  wide:true, s:'Sūrya Namaskāra B',              d:'सूर्य नमस्कार ब',               e:'Sun Salutation B',              series:'Primary' },
-  { id:'p04', s:'Pādānguṣṭhāsana', img:'images/poses/001_padangusthasana_400.png',                d:'पादाङ्गुष्ठासन',                e:'Big Toe Pose',                  series:'Primary' },
-  { id:'p05', s:'Pāda Hastāsana', img:'images/poses/002_padahastasana_400.png',                  d:'पादहस्तासन',                    e:'Hand Under Foot Pose',          series:'Primary' },
-  { id:'p06', img:'images/poses/003_utthita_trikonasana_400.png', s:'Utthita Trikoṇāsana',            d:'उत्थित त्रिकोणासन',             e:'Extended Triangle Pose',        series:'Primary' },
-  { id:'p07', img:'images/poses/004_parivrtta_trikonasana_400.png', s:'Parivṛtta Trikoṇāsana',          d:'परिवृत्त त्रिकोणासन',           e:'Revolved Triangle Pose',        series:'Primary' },
-  { id:'p08', img:'images/poses/005_utthita_parsvakonasana_400.png', s:'Utthita Pārśvakoṇāsana',         d:'उत्थित पार्श्वकोणासन',          e:'Extended Side Angle Pose',      series:'Primary' },
-  { id:'p09', img:'images/poses/006_parivrtta_parsvakonasana_400.png', s:'Parivṛtta Pārśvakoṇāsana',       d:'परिवृत्त पार्श्वकोणासन',        e:'Revolved Side Angle Pose',      series:'Primary' },
-  { id:'p10', img:'images/poses/007_prasarita_padottanasana_a_400.png', s:'Prasārita Pādottānāsana A',      d:'प्रसारित पादोत्तानासन अ',       e:'Wide-Legged Forward Fold A',    series:'Primary' },
-  { id:'p11', img:'images/poses/008_prasarita_padottanasana_b_400.png', s:'Prasārita Pādottānāsana B',      d:'प्रसारित पादोत्तानासन ब',       e:'Wide-Legged Forward Fold B',    series:'Primary' },
-  { id:'p12', img:'images/poses/009_prasarita_padottanasana_c_400.png', s:'Prasārita Pādottānāsana C',      d:'प्रसारित पादोत्तानासन च',       e:'Wide-Legged Forward Fold C',    series:'Primary' },
-  { id:'p13', img:'images/poses/010_prasarita_padottanasana_d_400.png', s:'Prasārita Pādottānāsana D',      d:'प्रसारित पादोत्तानासन ड',       e:'Wide-Legged Forward Fold D',    series:'Primary' },
-  { id:'p14', img:'images/poses/011_parsvottanasana_400.png', s:'Pārśvottānāsana',                d:'पार्श्वोत्तानासन',              e:'Intense Side Stretch',          series:'Primary' },
-  { id:'p15', img:'images/poses/012_utthita_hasta_padangusthasana_400.png', wide:true, s:'Utthita Hasta Pādānguṣṭhāsana',  d:'उत्थित हस्त पादाङ्गुष्ठासन',  e:'Extended Hand-to-Big-Toe',      series:'Primary' },
-  { id:'p16', img:'images/poses/013_ardha_baddha_padmottanasana_400.png', s:'Ardha Baddha Padmottānāsana',    d:'अर्ध बद्ध पद्मोत्तानासन',      e:'Half Bound Lotus Standing Fold',series:'Primary' },
-  { id:'p17', img:'images/poses/014_utkatasana_400.png', s:'Utkaṭāsana',                     d:'उत्कटासन',                      e:'Chair Pose',                    series:'Primary' },
-  { id:'p18', img:'images/poses/015_virabhadrasana_a_400.png', s:'Vīrabhadrāsana A',               d:'वीरभद्रासन अ',                  e:'Warrior I',                     series:'Primary' },
-  { id:'p19', img:'images/poses/016_virabhadrasana_b_400.png', s:'Vīrabhadrāsana B',               d:'वीरभद्रासन ब',                  e:'Warrior II',                    series:'Primary' },
-  { id:'p20', img:'images/poses/017_dandasana_400.png', s:'Daṇḍāsana',                      d:'दण्डासन',                       e:'Staff Pose',                    series:'Primary' },
-  { id:'p21', img:'images/poses/018_paschimottanasana_a_400.png', s:'Paścimottānāsana A',            d:'पश्चिमोत्तानासन अ',             e:'Seated Forward Fold A',         series:'Primary' },
-  { id:'p22', img:'images/poses/019_paschimottanasana_b_400.png', s:'Paścimottānāsana B',            d:'पश्चिमोत्तानासन ब',             e:'Seated Forward Fold B',         series:'Primary' },
-  { id:'p23', skip:true, s:'Paścimottānāsana C',            d:'पश्चिमोत्तानासन च',             e:'Seated Forward Fold C',         series:'Primary' },
-  { id:'p24', img:'images/poses/021_purvottanasana_400.png', s:'Pūrvottānāsana',                 d:'पूर्वोत्तानासन',                e:'Upward Plank Pose',             series:'Primary' },
-  { id:'p25', img:'images/poses/022_ardha_baddha_padma_paschimottanasana_400.png', s:'Ardha Baddha Padma Paścimottānāsana', d:'अर्ध बद्ध पद्म पश्चिमोत्तानासन', e:'Half Bound Lotus Forward Fold', series:'Primary', flag:true },
-  { id:'p26', img:'images/poses/023_trianga_mukhaikapada_paschimottanasana_400.png', s:'Triyang Mukha Eka Pāda Paścimottānāsana', d:'त्रियङ्ग मुखैकपाद पश्चिमोत्तानासन', e:'Three-Limbed Forward Fold', series:'Primary', flag:true },
-  { id:'p27', img:'images/poses/024_janu_sirsasana_a_400.png', s:'Jānu Śīrṣāsana A',               d:'जानु शीर्षासन अ',               e:'Head-to-Knee Pose A',           series:'Primary' },
-  { id:'p28', img:'images/poses/025_janu_sirsasana_b_400.png', s:'Jānu Śīrṣāsana B',               d:'जानु शीर्षासन ब',               e:'Head-to-Knee Pose B',           series:'Primary' },
-  { id:'p29', img:'images/poses/026_janu_sirsasana_c_400.png', s:'Jānu Śīrṣāsana C',               d:'जानु शीर्षासन च',               e:'Head-to-Knee Pose C',           series:'Primary' },
-  { id:'p30', img:'images/poses/027_marichyasana_a_400.png', s:'Marīcyāsana A',                 d:'मारीच्यासन अ',                  e:'Sage Marichi Pose A',           series:'Primary' },
-  { id:'p31', img:'images/poses/028_marichyasana_b_400.png', s:'Marīcyāsana B',                 d:'मारीच्यासन ब',                  e:'Sage Marichi Pose B',           series:'Primary' },
-  { id:'p32', img:'images/poses/029_marichyasana_c_400.png', s:'Marīcyāsana C',                 d:'मारीच्यासन च',                  e:'Sage Marichi Pose C',           series:'Primary' },
-  { id:'p33', img:'images/poses/030_marichyasana_d_400.png', s:'Marīcyāsana D',                 d:'मारीच्यासन ड',                  e:'Sage Marichi Pose D',           series:'Primary' },
-  { id:'p34', img:'images/poses/031_navasana_400.png', s:'Nāvāsana',                       d:'नावासन',                        e:'Boat Pose',                     series:'Primary' },
-  { id:'p35', img:'images/poses/032_bhujapidasana_400.png', s:'Bhuja Pīḍāsana',                  d:'भुजपीडासन',                     e:'Shoulder Pressing Pose',        series:'Primary' },
-  { id:'p36', img:'images/poses/033_kurmasana_400.png', s:'Kūrmāsana',                      d:'कूर्मासन',                      e:'Tortoise Pose',                 series:'Primary' },
-  { id:'p37', img:'images/poses/034_supta_kurmasana_400.png', s:'Supta Kūrmāsana',                d:'सुप्त कूर्मासन',                e:'Sleeping Tortoise Pose',        series:'Primary' },
-  { id:'p38', img:'images/poses/035_garbha_pindasana_400.png', s:'Garbha Piṇḍāsana',               d:'गर्भ पिण्डासन',                 e:'Embryo in Womb Pose',           series:'Primary' },
-  { id:'p39', img:'images/poses/036_kukkutasana_400.png', s:'Kukkuṭāsana',                    d:'कुक्कुटासन',                    e:'Rooster Pose',                  series:'Primary' },
-  { id:'p40', img:'images/poses/037_baddha_konasana_a_400.png', s:'Baddha Koṇāsana A',              d:'बद्ध कोणासन अ',                 e:'Bound Angle Pose A',            series:'Primary' },
-  { id:'p41', img:'images/poses/038_baddha_konasana_b_400.png', s:'Baddha Koṇāsana B',              d:'बद्ध कोणासन ब',                 e:'Bound Angle Pose B',            series:'Primary' },
-  { id:'p42', img:'images/poses/039_upavishta_konasana_400.png', wide:true, s:'Upaviṣṭha Koṇāsana',             d:'उपविष्ट कोणासन',               e:'Seated Wide Angle Pose',        series:'Primary' },
-  { id:'p43', img:'images/poses/040_supta_konasana_400.png', wide:true, s:'Supta Koṇāsana',                 d:'सुप्त कोणासन',                  e:'Reclining Angle Pose',          series:'Primary' },
-  { id:'p44', img:'images/poses/041_supta_padangusthasana_400.png', wide:true, s:'Supta Pādānguṣṭhāsana',          d:'सुप्त पादाङ्गुष्ठासन',         e:'Reclining Hand-to-Big-Toe',     series:'Primary' },
-  { id:'p45', img:'images/poses/042_ubhaya_padangusthasana_400.png', wide:true, s:'Ubhaya Pādānguṣṭhāsana',         d:'उभय पादाङ्गुष्ठासन',           e:'Both Feet Big Toe Pose',        series:'Primary' },
-  { id:'p46', img:'images/poses/043_urdhva_mukha_paschimottanasana_400.png', wide:true, s:'Ūrdhva Mukha Paścimottānāsana', d:'ऊर्ध्वमुख पश्चिमोत्तानासन',   e:'Upward Facing Forward Fold',    series:'Primary', flag:true },
-  { id:'p47', img:'images/poses/044_setu_bandhasana_400.png', s:'Setu Bandhāsana',                d:'सेतु बन्धासन',                  e:'Bridge Pose',                   series:'Primary' },
+  { id:'p01', img:'images/poses/samasthiti_400.png', s:'Samasthitiḥ',                    d:'समस्थिति',                       e:'Equal Standing',                series:'Primary', breaths:'5' },
+  { id:'p02', img:'images/poses/suryanamaskar_a_400.png',  wide:true, s:'Sūrya Namaskāra A',              d:'सूर्य नमस्कार अ',               e:'Sun Salutation A',              series:'Primary', breaths:'5' },
+  { id:'p03', img:'images/poses/suryanamaskar_b_400.png',  wide:true, s:'Sūrya Namaskāra B',              d:'सूर्य नमस्कार ब',               e:'Sun Salutation B',              series:'Primary', breaths:'5' },
+  { id:'p04', s:'Pādānguṣṭhāsana', img:'images/poses/001_padangusthasana_400.png',                d:'पादाङ्गुष्ठासन',                e:'Big Toe Pose',                  series:'Primary', breaths:'5' },
+  { id:'p05', s:'Pāda Hastāsana', img:'images/poses/002_padahastasana_400.png',                  d:'पादहस्तासन',                    e:'Hand Under Foot Pose',          series:'Primary', breaths:'5' },
+  { id:'p06', img:'images/poses/003_utthita_trikonasana_400.png', s:'Utthita Trikoṇāsana',            d:'उत्थित त्रिकोणासन',             e:'Extended Triangle Pose',        series:'Primary', breaths:'5 each side' },
+  { id:'p07', img:'images/poses/004_parivrtta_trikonasana_400.png', s:'Parivṛtta Trikoṇāsana',          d:'परिवृत्त त्रिकोणासन',           e:'Revolved Triangle Pose',        series:'Primary', breaths:'5 each side' },
+  { id:'p08', img:'images/poses/005_utthita_parsvakonasana_400.png', s:'Utthita Pārśvakoṇāsana',         d:'उत्थित पार्श्वकोणासन',          e:'Extended Side Angle Pose',      series:'Primary', breaths:'5 each side' },
+  { id:'p09', img:'images/poses/006_parivrtta_parsvakonasana_400.png', s:'Parivṛtta Pārśvakoṇāsana',       d:'परिवृत्त पार्श्वकोणासन',        e:'Revolved Side Angle Pose',      series:'Primary', breaths:'5 each side' },
+  { id:'p10', img:'images/poses/007_prasarita_padottanasana_a_400.png', s:'Prasārita Pādottānāsana A',      d:'प्रसारित पादोत्तानासन अ',       e:'Wide-Legged Forward Fold A',    series:'Primary', breaths:'5' },
+  { id:'p11', img:'images/poses/008_prasarita_padottanasana_b_400.png', s:'Prasārita Pādottānāsana B',      d:'प्रसारित पादोत्तानासन ब',       e:'Wide-Legged Forward Fold B',    series:'Primary', breaths:'5' },
+  { id:'p12', img:'images/poses/009_prasarita_padottanasana_c_400.png', s:'Prasārita Pādottānāsana C',      d:'प्रसारित पादोत्तानासन च',       e:'Wide-Legged Forward Fold C',    series:'Primary', breaths:'5' },
+  { id:'p13', img:'images/poses/010_prasarita_padottanasana_d_400.png', s:'Prasārita Pādottānāsana D',      d:'प्रसारित पादोत्तानासन ड',       e:'Wide-Legged Forward Fold D',    series:'Primary', breaths:'5' },
+  { id:'p14', img:'images/poses/011_parsvottanasana_400.png', s:'Pārśvottānāsana',                d:'पार्श्वोत्तानासन',              e:'Intense Side Stretch',          series:'Primary', breaths:'5 each side' },
+  { id:'p15', img:'images/poses/012_utthita_hasta_padangusthasana_400.png', wide:true, s:'Utthita Hasta Pādānguṣṭhāsana',  d:'उत्थित हस्त पादाङ्गुष्ठासन',  e:'Extended Hand-to-Big-Toe',      series:'Primary', breaths:'5 each side' },
+  { id:'p16', img:'images/poses/013_ardha_baddha_padmottanasana_400.png', s:'Ardha Baddha Padmottānāsana',    d:'अर्ध बद्ध पद्मोत्तानासन',      e:'Half Bound Lotus Standing Fold',series:'Primary', breaths:'5 each side' },
+  { id:'p17', img:'images/poses/014_utkatasana_400.png', s:'Utkaṭāsana',                     d:'उत्कटासन',                      e:'Chair Pose',                    series:'Primary', breaths:'5' },
+  { id:'p18', img:'images/poses/015_virabhadrasana_a_400.png', s:'Vīrabhadrāsana A',               d:'वीरभद्रासन अ',                  e:'Warrior I',                     series:'Primary', breaths:'5 each side' },
+  { id:'p19', img:'images/poses/016_virabhadrasana_b_400.png', s:'Vīrabhadrāsana B',               d:'वीरभद्रासन ब',                  e:'Warrior II',                    series:'Primary', breaths:'5 each side' },
+  { id:'p20', img:'images/poses/017_dandasana_400.png', s:'Daṇḍāsana',                      d:'दण्डासन',                       e:'Staff Pose',                    series:'Primary', breaths:'5' },
+  { id:'p21', img:'images/poses/018_paschimottanasana_a_400.png', s:'Paścimottānāsana A',            d:'पश्चिमोत्तानासन अ',             e:'Seated Forward Fold A',         series:'Primary', breaths:'5' },
+  { id:'p22', img:'images/poses/019_paschimottanasana_b_400.png', s:'Paścimottānāsana B',            d:'पश्चिमोत्तानासन ब',             e:'Seated Forward Fold B',         series:'Primary', breaths:'5' },
+  { id:'p23', skip:true, s:'Paścimottānāsana C',            d:'पश्चिमोत्तानासन च',             e:'Seated Forward Fold C',         series:'Primary', breaths:'5' },
+  { id:'p24', img:'images/poses/021_purvottanasana_400.png', s:'Pūrvottānāsana',                 d:'पूर्वोत्तानासन',                e:'Upward Plank Pose',             series:'Primary', breaths:'5' },
+  { id:'p25', img:'images/poses/022_ardha_baddha_padma_paschimottanasana_400.png', s:'Ardha Baddha Padma Paścimottānāsana', d:'अर्ध बद्ध पद्म पश्चिमोत्तानासन', e:'Half Bound Lotus Forward Fold', series:'Primary', flag:true, breaths:'5 each side' },
+  { id:'p26', img:'images/poses/023_trianga_mukhaikapada_paschimottanasana_400.png', s:'Triyang Mukha Eka Pāda Paścimottānāsana', d:'त्रियङ्ग मुखैकपाद पश्चिमोत्तानासन', e:'Three-Limbed Forward Fold', series:'Primary', flag:true, breaths:'5 each side' },
+  { id:'p27', img:'images/poses/024_janu_sirsasana_a_400.png', s:'Jānu Śīrṣāsana A',               d:'जानु शीर्षासन अ',               e:'Head-to-Knee Pose A',           series:'Primary', breaths:'5 each side' },
+  { id:'p28', img:'images/poses/025_janu_sirsasana_b_400.png', s:'Jānu Śīrṣāsana B',               d:'जानु शीर्षासन ब',               e:'Head-to-Knee Pose B',           series:'Primary', breaths:'5 each side' },
+  { id:'p29', img:'images/poses/026_janu_sirsasana_c_400.png', s:'Jānu Śīrṣāsana C',               d:'जानु शीर्षासन च',               e:'Head-to-Knee Pose C',           series:'Primary', breaths:'5 each side' },
+  { id:'p30', img:'images/poses/027_marichyasana_a_400.png', s:'Marīcyāsana A',                 d:'मारीच्यासन अ',                  e:'Sage Marichi Pose A',           series:'Primary', breaths:'5 each side' },
+  { id:'p31', img:'images/poses/028_marichyasana_b_400.png', s:'Marīcyāsana B',                 d:'मारीच्यासन ब',                  e:'Sage Marichi Pose B',           series:'Primary', breaths:'5 each side' },
+  { id:'p32', img:'images/poses/029_marichyasana_c_400.png', s:'Marīcyāsana C',                 d:'मारीच्यासन च',                  e:'Sage Marichi Pose C',           series:'Primary', breaths:'5 each side' },
+  { id:'p33', img:'images/poses/030_marichyasana_d_400.png', s:'Marīcyāsana D',                 d:'मारीच्यासन ड',                  e:'Sage Marichi Pose D',           series:'Primary', breaths:'5 each side' },
+  { id:'p34', img:'images/poses/031_navasana_400.png', s:'Nāvāsana',                       d:'नावासन',                        e:'Boat Pose',                     series:'Primary', breaths:'5' },
+  { id:'p35', img:'images/poses/032_bhujapidasana_400.png', s:'Bhuja Pīḍāsana',                  d:'भुजपीडासन',                     e:'Shoulder Pressing Pose',        series:'Primary', breaths:'5' },
+  { id:'p36', img:'images/poses/033_kurmasana_400.png', s:'Kūrmāsana',                      d:'कूर्मासन',                      e:'Tortoise Pose',                 series:'Primary', breaths:'5' },
+  { id:'p37', img:'images/poses/034_supta_kurmasana_400.png', s:'Supta Kūrmāsana',                d:'सुप्त कूर्मासन',                e:'Sleeping Tortoise Pose',        series:'Primary', breaths:'5' },
+  { id:'p38', img:'images/poses/035_garbha_pindasana_400.png', s:'Garbha Piṇḍāsana',               d:'गर्भ पिण्डासन',                 e:'Embryo in Womb Pose',           series:'Primary', breaths:'5' },
+  { id:'p39', img:'images/poses/036_kukkutasana_400.png', s:'Kukkuṭāsana',                    d:'कुक्कुटासन',                    e:'Rooster Pose',                  series:'Primary', breaths:'5' },
+  { id:'p40', img:'images/poses/037_baddha_konasana_a_400.png', s:'Baddha Koṇāsana A',              d:'बद्ध कोणासन अ',                 e:'Bound Angle Pose A',            series:'Primary', breaths:'5' },
+  { id:'p41', img:'images/poses/038_baddha_konasana_b_400.png', s:'Baddha Koṇāsana B',              d:'बद्ध कोणासन ब',                 e:'Bound Angle Pose B',            series:'Primary', breaths:'5' },
+  { id:'p42', img:'images/poses/039_upavishta_konasana_400.png', wide:true, s:'Upaviṣṭha Koṇāsana',             d:'उपविष्ट कोणासन',               e:'Seated Wide Angle Pose',        series:'Primary', breaths:'5' },
+  { id:'p43', img:'images/poses/040_supta_konasana_400.png', wide:true, s:'Supta Koṇāsana',                 d:'सुप्त कोणासन',                  e:'Reclining Angle Pose',          series:'Primary', breaths:'5' },
+  { id:'p44', img:'images/poses/041_supta_padangusthasana_400.png', wide:true, s:'Supta Pādānguṣṭhāsana',          d:'सुप्त पादाङ्गुष्ठासन',         e:'Reclining Hand-to-Big-Toe',     series:'Primary', breaths:'5 each side' },
+  { id:'p45', img:'images/poses/042_ubhaya_padangusthasana_400.png', wide:true, s:'Ubhaya Pādānguṣṭhāsana',         d:'उभय पादाङ्गुष्ठासन',           e:'Both Feet Big Toe Pose',        series:'Primary', breaths:'5' },
+  { id:'p46', img:'images/poses/043_urdhva_mukha_paschimottanasana_400.png', wide:true, s:'Ūrdhva Mukha Paścimottānāsana', d:'ऊर्ध्वमुख पश्चिमोत्तानासन',   e:'Upward Facing Forward Fold',    series:'Primary', flag:true, breaths:'5' },
+  { id:'p47', img:'images/poses/044_setu_bandhasana_400.png', s:'Setu Bandhāsana',                d:'सेतु बन्धासन',                  e:'Bridge Pose',                   series:'Primary', breaths:'5' },
 ];
 
 const SECONDARY = [
-  { id:'s01', s:'Pāśāsana',                         d:'पाशासन',                         e:'Noose Pose',                         series:'Secondary', img:'images/poses/s01_pashasana_400.png' },
-  { id:'s02', s:'Kroñcāsana',                        d:'क्रौञ्चासन',                     e:'Heron Pose',                         series:'Secondary', img:'images/poses/s02_krounchasana_400.png' },
-  { id:'s03', s:'Śalabhāsana A',                     d:'शलभासन अ',                       e:'Locust Pose A',                      series:'Secondary', img:'images/poses/s03_shalabhasana_a_400.png' },
-  { id:'s04', s:'Śalabhāsana B',                     d:'शलभासन ब',                       e:'Locust Pose B',                      series:'Secondary', img:'images/poses/s04_shalabhasana_b_400.png' },
-  { id:'s05', s:'Bhekāsana',                         d:'भेकासन',                         e:'Frog Pose',                          series:'Secondary', img:'images/poses/s05_bhekasana_400.png' },
-  { id:'s06', s:'Dhanurāsana',                       d:'धनुरासन',                        e:'Bow Pose',                           series:'Secondary', img:'images/poses/s06_dhanurasana_400.png' },
-  { id:'s07', s:'Pārśva Dhanurāsana',                d:'पार्श्व धनुरासन',                e:'Side Bow Pose',                      series:'Secondary', img:'images/poses/s07_parsva_dhanurasana_400.png' },
-  { id:'s08', s:'Uṣṭrāsana',                         d:'उष्ट्रासन',                      e:'Camel Pose',                         series:'Secondary', img:'images/poses/s08_ustrasana_400.png' },
-  { id:'s09', s:'Laghu Vajrāsana',                   d:'लघु वज्रासन',                    e:'Little Thunderbolt Pose',            series:'Secondary', img:'images/poses/s09_laghu_vajrasana_400.png' },
-  { id:'s10', s:'Kapotāsana A',                      d:'कपोतासन अ',                      e:'Pigeon Pose A',                      series:'Secondary', img:'images/poses/s10_kapotasana_a_400.png' },
-  { id:'s11', s:'Kapotāsana B',                      d:'कपोतासन ब',                      e:'Pigeon Pose B',                      series:'Secondary', img:'images/poses/s11_kapotasana_b_400.png' },
-  { id:'s12', s:'Supta Vajrāsana',                   d:'सुप्त वज्रासन',                  e:'Reclining Thunderbolt',              series:'Secondary' },
-  { id:'s13', s:'Bakāsana',                          d:'बकासन',                          e:'Crane Pose',                         series:'Secondary', img:'images/poses/s13_bakasana_400.png', wide:true },
-  { id:'s14', s:'Bharadvājāsana',                    d:'भरद्वाजासन',                     e:"Bharadvāja's Twist",                 series:'Secondary', img:'images/poses/s14_bharadvajasana_400.png' },
-  { id:'s15', s:'Ardha Matsyendrāsana',              d:'अर्ध मत्स्येन्द्रासन',           e:'Half Lord of the Fishes',            series:'Secondary', img:'images/poses/s15_ardha_matsyendrasana_400.png' },
-  { id:'s16', s:'Ekapāda Śīrṣāsana',                d:'एक पाद शीर्षासन',                e:'One Foot Behind Head',               series:'Secondary', img:'images/poses/s16_eka_pada_sirsasana_400.png', wide:true },
-  { id:'s17', s:'Dvi Pāda Śīrṣāsana',               d:'द्वि पाद शीर्षासन',              e:'Both Feet Behind Head',              series:'Secondary', img:'images/poses/s17_dwi_pada_sirsasana_400.png', wide:true },
-  { id:'s18', s:'Yoga Nidrāsana',                    d:'योग निद्रासन',                   e:'Yoga Sleep Pose',                    series:'Secondary', img:'images/poses/s18_yoga_nidrasana_400.png' },
-  { id:'s19', s:'Ṭiṭṭibhāsana A, B & C',            d:'टिट्टिभासन अ, ब व च',            e:'Firefly Pose A, B & C',              series:'Secondary', img:'images/poses/s19_tittibhasana_abc_400.png', wide:true },
-  { id:'s20', s:'Pinca Mayūrāsana',                  d:'पिञ्च मयूरासन',                  e:'Feathered Peacock Pose',             series:'Secondary', img:'images/poses/s20_pincha_mayurasana_400.png' },
-  { id:'s21', s:'Karāṇḍavāsana',                    d:'कारण्डवासन',                     e:'Duck Pose',                          series:'Secondary', img:'images/poses/s21_karandavasana_400.png' },
-  { id:'s22', s:'Mayūrāsana',                        d:'मयूरासन',                        e:'Peacock Pose',                       series:'Secondary', img:'images/poses/s22_mayurasana_400.png' },
-  { id:'s23', s:'Nakrāsana',                         d:'नक्रासन',                        e:'Crocodile Pose',                     series:'Secondary', img:'images/poses/s23_nakrasana_400.png' },
-  { id:'s24', s:'Vātāyanāsana',                      d:'वातायनासन',                      e:'Horse Pose',                         series:'Secondary', img:'images/poses/s24_vatayanasana_400.png' },
-  { id:'s25', s:'Parighāsana',                       d:'परिघासन',                        e:'Gate Pose',                          series:'Secondary', img:'images/poses/s25_parighasana_400.png' },
-  { id:'s26', s:'Gomukhāsana A',                     d:'गोमुखासन अ',                     e:'Cow Face Pose A',                    series:'Secondary', img:'images/poses/s26_gomukhasana_a_400.png' },
-  { id:'s27', s:'Gomukhāsana B',                     d:'गोमुखासन ब',                     e:'Cow Face Pose B',                    series:'Secondary', img:'images/poses/s27_gomukhasana_b_400.png' },
-  { id:'s28', s:'Supta Ūrdhva Pāda Vajrāsana',      d:'सुप्त ऊर्ध्व पाद वज्रासन',      e:'Reclining Upward Leg Thunderbolt',   series:'Secondary', img:'images/poses/s28_supta_urdhva_pada_vajrasana_400.png', wide:true },
-  { id:'s29', s:'Mukta Hasta Śīrṣāsana A, B & C',   d:'मुक्त हस्त शीर्षासन अ, ब व च',  e:'Free Hands Headstand A, B & C',      series:'Secondary', img:'images/poses/s29_mukta_hasta_sirsasana_abc_400.png', wide:true },
-  { id:'s30', s:'Baddha Hasta Śīrṣāsana A, B, C & D', d:'बद्ध हस्त शीर्षासन अ, ब, च व ड', e:'Bound Hands Headstand A, B, C & D', series:'Secondary', img:'images/poses/s30_baddha_hasta_sirsasana_abcd_400.png', wide:true },
+  { id:'s01', s:'Pāśāsana',                         d:'पाशासन',                         e:'Noose Pose',                         series:'Secondary', img:'images/poses/s01_pashasana_400.png', breaths:'5 each side' },
+  { id:'s02', s:'Kroñcāsana',                        d:'क्रौञ्चासन',                     e:'Heron Pose',                         series:'Secondary', img:'images/poses/s02_krounchasana_400.png', breaths:'5 each side' },
+  { id:'s03', s:'Śalabhāsana A',                     d:'शलभासन अ',                       e:'Locust Pose A',                      series:'Secondary', img:'images/poses/s03_shalabhasana_a_400.png', breaths:'5' },
+  { id:'s04', s:'Śalabhāsana B',                     d:'शलभासन ब',                       e:'Locust Pose B',                      series:'Secondary', img:'images/poses/s04_shalabhasana_b_400.png', breaths:'5' },
+  { id:'s05', s:'Bhekāsana',                         d:'भेकासन',                         e:'Frog Pose',                          series:'Secondary', img:'images/poses/s05_bhekasana_400.png', breaths:'5' },
+  { id:'s06', s:'Dhanurāsana',                       d:'धनुरासन',                        e:'Bow Pose',                           series:'Secondary', img:'images/poses/s06_dhanurasana_400.png', breaths:'5' },
+  { id:'s07', s:'Pārśva Dhanurāsana',                d:'पार्श्व धनुरासन',                e:'Side Bow Pose',                      series:'Secondary', img:'images/poses/s07_parsva_dhanurasana_400.png', breaths:'5 each side' },
+  { id:'s08', s:'Uṣṭrāsana',                         d:'उष्ट्रासन',                      e:'Camel Pose',                         series:'Secondary', img:'images/poses/s08_ustrasana_400.png', breaths:'5' },
+  { id:'s09', s:'Laghu Vajrāsana',                   d:'लघु वज्रासन',                    e:'Little Thunderbolt Pose',            series:'Secondary', img:'images/poses/s09_laghu_vajrasana_400.png', breaths:'5' },
+  { id:'s10', s:'Kapotāsana A',                      d:'कपोतासन अ',                      e:'Pigeon Pose A',                      series:'Secondary', img:'images/poses/s10_kapotasana_a_400.png', breaths:'5' },
+  { id:'s11', s:'Kapotāsana B',                      d:'कपोतासन ब',                      e:'Pigeon Pose B',                      series:'Secondary', img:'images/poses/s11_kapotasana_b_400.png', breaths:'5' },
+  { id:'s12', s:'Supta Vajrāsana',                   d:'सुप्त वज्रासन',                  e:'Reclining Thunderbolt',              series:'Secondary', breaths:'5' },
+  { id:'s13', s:'Bakāsana',                          d:'बकासन',                          e:'Crane Pose',                         series:'Secondary', img:'images/poses/s13_bakasana_400.png', wide:true, breaths:'5' },
+  { id:'s14', s:'Bharadvājāsana',                    d:'भरद्वाजासन',                     e:"Bharadvāja's Twist",                 series:'Secondary', img:'images/poses/s14_bharadvajasana_400.png', breaths:'5 each side' },
+  { id:'s15', s:'Ardha Matsyendrāsana',              d:'अर्ध मत्स्येन्द्रासन',           e:'Half Lord of the Fishes',            series:'Secondary', img:'images/poses/s15_ardha_matsyendrasana_400.png', breaths:'5 each side' },
+  { id:'s16', s:'Ekapāda Śīrṣāsana',                d:'एक पाद शीर्षासन',                e:'One Foot Behind Head',               series:'Secondary', img:'images/poses/s16_eka_pada_sirsasana_400.png', wide:true, breaths:'5 each side' },
+  { id:'s17', s:'Dvi Pāda Śīrṣāsana',               d:'द्वि पाद शीर्षासन',              e:'Both Feet Behind Head',              series:'Secondary', img:'images/poses/s17_dwi_pada_sirsasana_400.png', wide:true, breaths:'10' },
+  { id:'s18', s:'Yoga Nidrāsana',                    d:'योग निद्रासन',                   e:'Yoga Sleep Pose',                    series:'Secondary', img:'images/poses/s18_yoga_nidrasana_400.png', breaths:'10' },
+  { id:'s19', s:'Ṭiṭṭibhāsana A, B & C',            d:'टिट्टिभासन अ, ब व च',            e:'Firefly Pose A, B & C',              series:'Secondary', img:'images/poses/s19_tittibhasana_abc_400.png', wide:true, breaths:'5' },
+  { id:'s20', s:'Pinca Mayūrāsana',                  d:'पिञ्च मयूरासन',                  e:'Feathered Peacock Pose',             series:'Secondary', img:'images/poses/s20_pincha_mayurasana_400.png', breaths:'5' },
+  { id:'s21', s:'Karāṇḍavāsana',                    d:'कारण्डवासन',                     e:'Duck Pose',                          series:'Secondary', img:'images/poses/s21_karandavasana_400.png', breaths:'5' },
+  { id:'s22', s:'Mayūrāsana',                        d:'मयूरासन',                        e:'Peacock Pose',                       series:'Secondary', img:'images/poses/s22_mayurasana_400.png', breaths:'5' },
+  { id:'s23', s:'Nakrāsana',                         d:'नक्रासन',                        e:'Crocodile Pose',                     series:'Secondary', img:'images/poses/s23_nakrasana_400.png', breaths:'5' },
+  { id:'s24', s:'Vātāyanāsana',                      d:'वातायनासन',                      e:'Horse Pose',                         series:'Secondary', img:'images/poses/s24_vatayanasana_400.png', breaths:'5 each side' },
+  { id:'s25', s:'Parighāsana',                       d:'परिघासन',                        e:'Gate Pose',                          series:'Secondary', img:'images/poses/s25_parighasana_400.png', breaths:'5 each side' },
+  { id:'s26', s:'Gomukhāsana A',                     d:'गोमुखासन अ',                     e:'Cow Face Pose A',                    series:'Secondary', img:'images/poses/s26_gomukhasana_a_400.png', breaths:'5 each side' },
+  { id:'s27', s:'Gomukhāsana B',                     d:'गोमुखासन ब',                     e:'Cow Face Pose B',                    series:'Secondary', img:'images/poses/s27_gomukhasana_b_400.png', breaths:'5 each side' },
+  { id:'s28', s:'Supta Ūrdhva Pāda Vajrāsana',      d:'सुप्त ऊर्ध्व पाद वज्रासन',      e:'Reclining Upward Leg Thunderbolt',   series:'Secondary', img:'images/poses/s28_supta_urdhva_pada_vajrasana_400.png', wide:true, breaths:'5 each side' },
+  { id:'s29', s:'Mukta Hasta Śīrṣāsana A, B & C',   d:'मुक्त हस्त शीर्षासन अ, ब व च',  e:'Free Hands Headstand A, B & C',      series:'Secondary', img:'images/poses/s29_mukta_hasta_sirsasana_abc_400.png', wide:true, breaths:'5' },
+  { id:'s30', s:'Baddha Hasta Śīrṣāsana A, B, C & D', d:'बद्ध हस्त शीर्षासन अ, ब, च व ड', e:'Bound Hands Headstand A, B, C & D', series:'Secondary', img:'images/poses/s30_baddha_hasta_sirsasana_abcd_400.png', wide:true, breaths:'5' },
 ];
 
 const FINISHING = [
@@ -2248,6 +2334,9 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
       return;
     }
     // Only re-render if the screen hasn't been initialised yet
+    if (target === 'screen-practice' && document.getElementById('fc-area').innerHTML === '') {
+      renderFC(0);
+    }
     if (target === 'screen-sequence' && document.getElementById('sq-area').innerHTML === '') {
       renderSeq(0);
     }
@@ -2757,6 +2846,14 @@ function renderSeq(idx) {
         <div class="seq-learn-sanskrit">${pose.s}</div>
         <div class="seq-learn-devanagari">${pose.d}</div>
         <div class="seq-learn-english">${engStrPlain(pose)}</div>
+        ${pose.breaths ? `<div class="breath-strip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex-shrink:0;opacity:0.75;">
+            <path d="M3 8 L10 8 C13 8 15 6.5 15 5 C15 3.7 14 3 12.5 3" stroke="var(--terra)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+            <path d="M3 12 L17 12" stroke="var(--terra)" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M3 16 L12 16 C15 16 17 17.5 17 19 C17 20.3 16 21 14.5 21" stroke="var(--terra)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+          </svg>
+          <span class="breath-count">${pose.breaths.replace(/ each side.*$/, '')} breaths</span>${pose.breaths.includes('each side') ? '<span class="breath-label">&nbsp;· each side</span>' : ''}
+        </div>` : ''}
       </div>
       <div class="seq-learn-bottom">
         <div class="seq-nav">
@@ -3123,9 +3220,34 @@ function showResults() {
     barsEl.appendChild(row);
   });
 
+  // ── Wrong pose review section ──
+  const reviewSection = document.getElementById('review-section');
+  const reviewSub     = document.getElementById('review-sub');
+  if (!isSeq && missedIds.length > 0) {
+    reviewSection.style.display = '';
+    reviewSub.textContent = `${missedIds.length} pose${missedIds.length > 1 ? 's' : ''} to revisit`;
+  } else {
+    reviewSection.style.display = 'none';
+  }
+
   // Hide share-section entirely in sequence/empty modes
   showScreen('screen-results');
 }
+
+document.getElementById('btn-review-practice').addEventListener('click', () => {
+  const src = st.lastCompleted || st;
+  const allPoses = [...PRIMARY, ...SECONDARY, ...FINISHING];
+  const missedIds = Object.keys(src.wrongPoses || {}).filter(id => src.wrongPoses[id] > 0);
+  if (missedIds.length === 0) return;
+  // Build a deck from only the missed poses
+  const missedDeck = missedIds.map(id => allPoses.find(p => p.id === id)).filter(Boolean);
+  st.deck = shuffle([...missedDeck]);
+  st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false;
+  st.wrongPoses = {}; st.secCorrect = {}; st.secTotal = {};
+  st.completedScreen = null;
+  renderFC(0); showScreen('screen-practice');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === 'screen-practice'));
+});
 
 document.getElementById('btn-again').addEventListener('click', () => {
   st.deck = buildDeck(); st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.wrongPoses = {}; st.secCorrect = {}; st.secTotal = {}; st.completedScreen = null;
