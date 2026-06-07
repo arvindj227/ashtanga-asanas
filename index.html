@@ -1294,52 +1294,25 @@ body.splashing .bottom-nav { visibility: hidden; }
 }
 
 .review-row-wrap {
-  padding: 0 0 12px;
-}
-.revisit-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 11px 14px;
-  border-radius: 11px;
-  border: 1px solid var(--sand);
-  background: var(--cream);
-  margin-bottom: 8px;
-}
-.revisit-row-left {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.missed-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #8B3A2A;
-  opacity: 0.7;
-  flex-shrink: 0;
-}
-.revisit-row-text {
-  font-size: 0.76rem;
-  color: var(--ink);
-  font-weight: 400;
-}
-.revisit-row-hint {
-  font-size: 0.63rem;
-  color: var(--muted);
-  margin-top: 2px;
+  width: 100%;
+  padding: 4px 0 12px;
 }
 .btn-revisit-go {
-  padding: 7px 14px;
-  border-radius: 20px;
-  border: 1.5px solid rgba(139,58,42,0.3);
-  background: transparent;
+  width: 100%;
+  padding: 13px;
+  border-radius: var(--radius-btn);
+  background: rgba(139,58,42,0.07);
+  border: 1.5px solid rgba(139,58,42,0.2);
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 500;
   color: #8B3A2A;
+  text-align: center;
   cursor: pointer;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1998,16 +1971,10 @@ body.splashing .bottom-nav { visibility: hidden; }
 
       </div>
       <div id="review-section" style="display:none;" class="review-row-wrap">
-        <div class="revisit-row" id="review-card">
-          <div class="revisit-row-left">
-            <div class="missed-dot"></div>
-            <div>
-              <div class="revisit-row-text" id="review-sub"></div>
-              <div class="revisit-row-hint">Practice only these next</div>
-            </div>
-          </div>
-          <button class="btn-revisit-go" id="btn-review-practice">Go →</button>
-        </div>
+        <button class="btn-revisit-go" id="btn-review-practice">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M1 4v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 15a9 9 0 1 0 .49-4.95L1 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="review-sub"></span>
+        </button>
       </div>
       <div class="results-btns">
         <button class="btn-again"  id="btn-again">Practice again</button>
@@ -3225,7 +3192,7 @@ function showResults() {
   const reviewSub     = document.getElementById('review-sub');
   if (!isSeq && missedIds.length > 0) {
     reviewSection.style.display = '';
-    reviewSub.textContent = `${missedIds.length} pose${missedIds.length > 1 ? 's' : ''} to revisit`;
+    reviewSub.textContent = `Revisit ${missedIds.length} missed pose${missedIds.length > 1 ? 's' : ''}`;
   } else {
     reviewSection.style.display = 'none';
   }
