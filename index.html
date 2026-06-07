@@ -159,7 +159,7 @@ body.splashing .bottom-nav { visibility: hidden; }
 
 /* ─── BOTTOM NAV ─── */
 .bottom-nav {
-  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  height: var(--nav-h);
   background: var(--forest);
   display: flex;
   align-items: stretch;
@@ -168,7 +168,6 @@ body.splashing .bottom-nav { visibility: hidden; }
   max-width: 480px;
   margin: 0 auto;
   border-top: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-btn {
