@@ -1,0 +1,24 @@
+{
+  "name": "Ashtanga Asanas",
+  "short_name": "Ashtanga",
+  "description": "Learn the Ashtanga Primary and Secondary series — flashcards, sequence practice, and pose reference.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2C3E2D",
+  "theme_color": "#2C3E2D",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
