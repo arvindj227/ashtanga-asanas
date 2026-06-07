@@ -38,7 +38,6 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   touch-action: manipulation; /* disable double-tap zoom on mobile */
-  background: #2C3E2D; /* fills safe area zones top and bottom with forest green */
 }
 
 body {
@@ -162,15 +161,12 @@ body.splashing .bottom-nav { visibility: hidden; }
   height: var(--nav-h);
   background: var(--forest);
   display: flex;
-  align-items: flex-start;
-  padding-top: 8px;
+  align-items: stretch;
   flex-shrink: 0;
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
   border-top: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: env(safe-area-inset-bottom);
-  box-sizing: content-box;
 }
 
 .nav-btn {
