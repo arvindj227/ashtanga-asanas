@@ -163,8 +163,7 @@ body.splashing .bottom-nav { visibility: hidden; }
 /* ─── BOTTOM NAV ─── */
 .bottom-nav {
   height: auto;
-  min-height: var(--nav-h);
-  padding-bottom: var(--sab);
+  padding-bottom: max(6px, calc(var(--sab) - 18px));
   box-sizing: border-box;
   background: var(--forest);
   display: flex;
@@ -186,7 +185,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 8px 4px;
+  padding: 7px 2px 2px;
   transition: background 0.15s;
   position: relative;
 }
@@ -270,7 +269,7 @@ body.splashing .bottom-nav { visibility: hidden; }
 }
 
 .welcome-lotus {
-  width: 52px; height: 52px;
+  width: 64px; height: 64px;
   border-radius: 50%;
   border: 1.5px solid var(--terra);
   display: flex; align-items: center; justify-content: center;
@@ -287,7 +286,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   border: 1px solid rgba(196,132,90,0.35);
   pointer-events: none;
 }
-.welcome-lotus svg { width: 40px; height: 40px; position: relative; z-index: 1; }
+.welcome-lotus svg { width: 48px; height: 48px; position: relative; z-index: 1; }
 
 /* pulse ring that fires on click */
 .welcome-lotus .lotus-pulse-ring {
@@ -1975,7 +1974,7 @@ button.mode-card {
         <div class="pool-row">
           <div class="pool-row-label">Practice up to</div>
           <select class="range-select" id="range-select">
-            <option value="">Full series</option>
+            <option value="">Full primary series</option>
           </select>
           <svg class="range-select-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3236,7 +3235,10 @@ const rangeSelect = document.getElementById('range-select');
 
 function populateRangePicker() {
   const series = st.series;
-  rangeSelect.innerHTML = '<option value="">Full series</option>';
+  const fullLabel = series === 'primary' ? 'Full primary series'
+    : series === 'secondary' ? 'Full secondary series'
+    : 'Full primary and secondary series';
+  rangeSelect.innerHTML = `<option value="">${fullLabel}</option>`;
 
   let poses = [];
   if (series === 'primary') {
