@@ -108,7 +108,7 @@ body {
     content: '';
     position: absolute;
     left: 50%;
-    bottom: 8px;
+    bottom: 3px;
     transform: translateX(-50%);
     width: 128px;
     height: 5px;
@@ -163,7 +163,7 @@ body.splashing .bottom-nav { visibility: hidden; }
 /* ─── BOTTOM NAV ─── */
 .bottom-nav {
   height: auto;
-  padding-bottom: max(2px, calc(var(--sab) - 28px));
+  padding-bottom: 0;
   box-sizing: border-box;
   background: var(--forest);
   display: flex;
@@ -185,7 +185,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 6px 2px 0;
+  padding: 10px 2px calc(8px + max(0px, var(--sab) - 32px));
   transition: background 0.15s;
   position: relative;
 }
