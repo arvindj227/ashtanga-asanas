@@ -189,9 +189,10 @@ body.splashing .bottom-nav { visibility: hidden; }
   transition: background 0.15s;
   position: relative;
 }
-@media (hover: hover) { .nav-btn:hover { background: rgba(255,255,255,0.05); } }
-.nav-btn:active { background: rgba(196,132,90,0.18); }
-.nav-btn.active { background: rgba(196,132,90,0.14); }
+.nav-btn.active,
+.nav-btn.active:hover,
+.nav-btn.active:active { background: rgba(196,132,90,0.14); }
+.nav-btn.nav-pressed { background: rgba(196,132,90,0.18); }
 .nav-btn.nav-disabled { opacity: 0.3; cursor: pointer; }
 .nav-btn.active::before {
   content: '';
@@ -2574,13 +2575,27 @@ function isDeckDone(screen) {
 
 // Nav buttons
 document.querySelectorAll('.nav-btn').forEach(btn => {
+  const release = () => {
+    clearTimeout(btn._pressTimer);
+    btn._pressTimer = setTimeout(() => {
+      btn.classList.remove('nav-pressed');
+      btn.blur();
+    }, 120);
+  };
+  btn.addEventListener('pointerdown', () => btn.classList.add('nav-pressed'));
+  btn.addEventListener('pointerup', release);
+  btn.addEventListener('pointercancel', release);
+  btn.addEventListener('pointerleave', release);
+  btn.addEventListener('touchend', release);
+  btn.addEventListener('touchcancel', release);
+
   btn.addEventListener('click', () => {
     const target = btn.dataset.nav;
 
     if (target === 'practice') {
       if (!st.sessionLive || !st.practiceScreen) {
         toast(null, 'Begin a practice from Home.');
-        btn.blur();
+        release();
         return;
       }
       showScreen(st.practiceScreen);
@@ -2593,7 +2608,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (target === 'screen-results') {
       if (!st.lastCompleted) {
         toast(null, 'Complete a session to see your results.');
-        btn.blur();
+        release();
         return;
       }
       showResults();
