@@ -1449,29 +1449,34 @@ button.mode-card {
 }
 .toggle-switch-sm.active .toggle-knob-sm { transform: translateX(14px); }
 
-.breath-strip {
+.pose-notes {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 7px;
-  margin-top: 11px;
-  padding-top: 10px;
-  border-top: 1px solid var(--sand);
-}
-.breath-icon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.breath-count {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--terra);
-}
-.breath-label {
-  font-size: 0.7rem;
+  gap: 6px;
+  margin: 18px auto 2px;
   color: var(--muted);
-  flex: 1;
 }
+.pose-notes::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  margin-bottom: 8px;
+  background: var(--sand);
+}
+.note-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 270px;
+  font-size: 0.76rem;
+  font-weight: 300;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+}
+.note-icon { flex-shrink: 0; opacity: 0.65; }
 
 .review-row-wrap {
   width: 100%;
@@ -1974,7 +1979,7 @@ button.mode-card {
           </div>
         </div>
         <div class="pool-row">
-          <div class="pool-row-label">Practice up to</div>
+          <div class="pool-row-label" id="range-label">Last pose you know</div>
           <select class="range-select" id="range-select">
             <option value="">Full primary series</option>
           </select>
@@ -2355,22 +2360,119 @@ const SECONDARY = [
 ];
 
 const FINISHING = [
-  { id:'f01', img:'images/poses/f01_urdhva_dhanurasana_400.png', s:'Ūrdhva Dhanurāsana',     d:'ऊर्ध्व धनुरासन',     e:'Upward Bow / Wheel Pose',   series:'Finishing' },
-  { id:'f02', img:'images/poses/f02_salamba_sarvangasana_400.png', s:'Sālamba Sarvāṅgāsana',   d:'सालम्ब सर्वाङ्गासन', e:'Shoulderstand',   series:'Finishing' },
-  { id:'f03', img:'images/poses/f03_halasana_400.png', s:'Halāsana',               d:'हलासन',               e:'Plough Pose',               series:'Finishing' },
-  { id:'f04', img:'images/poses/f04_karnapidasana_400.png', s:'Karṇa Pīḍāsana',          d:'कर्णपीडासन',          e:'Ear Pressing Pose',         series:'Finishing' },
-  { id:'f05', img:'images/poses/f05_urdhva_padmasana_400.png', s:'Ūrdhva Padmāsana',       d:'ऊर्ध्व पद्मासन',     e:'Upward Lotus Pose',         series:'Finishing' },
-  { id:'f06', img:'images/poses/f06_pindasana_400.png', s:'Piṇḍāsana',              d:'पिण्डासन',            e:'Embryo Pose',               series:'Finishing' },
-  { id:'f07', img:'images/poses/f07_matsyasana_400.png', s:'Matsyāsana',             d:'मत्स्यासन',           e:'Fish Pose',                 series:'Finishing' },
-  { id:'f08', img:'images/poses/f08_uttana_padasana_400.png', s:'Uttāna Pādāsana',        d:'उत्तान पादासन',       e:'Extended Leg Pose',         series:'Finishing' },
-  { id:'f09', img:'images/poses/f09_sirsasana_400.png', s:'Śīrṣāsana',            d:'शीर्षासन',          e:'Headstand',               series:'Finishing' },
-  { id:'f10', img:'images/poses/f10_urdhva_dandasana_400.png', s:'Ūrdhva Daṇḍāsana',            d:'ऊर्ध्व दण्डासन',          e:'Upward Staff Pose',               series:'Finishing' },
-  { id:'f11', img:'images/poses/f11_balasana_400.png', s:'Bālāsana',               d:'बालासन',              e:"Child's Pose",              series:'Finishing' },
-  { id:'f12', img:'images/poses/f12_yoga_mudrasana_400.png', s:'Yoga Mudrā',         d:'योग मुद्रासन',        e:'Yoga Seal Pose',            series:'Finishing' },
-  { id:'f13', img:'images/poses/f13_padmasana_400.png', s:'Padmāsana',              d:'पद्मासन',             e:'Lotus Pose',                series:'Finishing' },
-  { id:'f14', img:'images/poses/f14_utpluthih_400.png', s:'Utplutiḥ',              d:'उत्प्लुतिः',          e:'Scales Pose',               series:'Finishing' },
-  { id:'f15', img:'images/poses/f15_savasana_400.png', s:'Śavāsana',               d:'शवासन',               e:'Corpse Pose',               series:'Finishing' },
+  { id:'f01', img:'images/poses/f01_urdhva_dhanurasana_400.png', s:'Ūrdhva Dhanurāsana',     d:'ऊर्ध्व धनुरासन',     e:'Upward Bow / Wheel Pose',   series:'Finishing', breaths:'5 to 10' },
+  { id:'f02', img:'images/poses/f02_salamba_sarvangasana_400.png', s:'Sālamba Sarvāṅgāsana',   d:'सालम्ब सर्वाङ्गासन', e:'Shoulderstand',   series:'Finishing', breaths:'10 to 25' },
+  { id:'f03', img:'images/poses/f03_halasana_400.png', s:'Halāsana',               d:'हलासन',               e:'Plough Pose',               series:'Finishing', breaths:'5 to 10' },
+  { id:'f04', img:'images/poses/f04_karnapidasana_400.png', s:'Karṇa Pīḍāsana',          d:'कर्णपीडासन',          e:'Ear Pressing Pose',         series:'Finishing', breaths:'5 to 10' },
+  { id:'f05', img:'images/poses/f05_urdhva_padmasana_400.png', s:'Ūrdhva Padmāsana',       d:'ऊर्ध्व पद्मासन',     e:'Upward Lotus Pose',         series:'Finishing', breaths:'5 to 10' },
+  { id:'f06', img:'images/poses/f06_pindasana_400.png', s:'Piṇḍāsana',              d:'पिण्डासन',            e:'Embryo Pose',               series:'Finishing', breaths:'5 to 10' },
+  { id:'f07', img:'images/poses/f07_matsyasana_400.png', s:'Matsyāsana',             d:'मत्स्यासन',           e:'Fish Pose',                 series:'Finishing', breaths:'5 to 10' },
+  { id:'f08', img:'images/poses/f08_uttana_padasana_400.png', s:'Uttāna Pādāsana',        d:'उत्तान पादासन',       e:'Extended Leg Pose',         series:'Finishing', breaths:'5 to 10' },
+  { id:'f09', img:'images/poses/f09_sirsasana_400.png', s:'Śīrṣāsana',            d:'शीर्षासन',          e:'Headstand',               series:'Finishing', breaths:'10 to 25' },
+  { id:'f10', img:'images/poses/f10_urdhva_dandasana_400.png', s:'Ūrdhva Daṇḍāsana',            d:'ऊर्ध्व दण्डासन',          e:'Upward Staff Pose',               series:'Finishing', breaths:'10 to 25' },
+  { id:'f11', img:'images/poses/f11_balasana_400.png', s:'Bālāsana',               d:'बालासन',              e:"Child's Pose",              series:'Finishing', hold:'A few breaths' },
+  { id:'f12', img:'images/poses/f12_yoga_mudrasana_400.png', s:'Yoga Mudrā',         d:'योग मुद्रासन',        e:'Yoga Seal Pose',            series:'Finishing', breaths:'10 to 25' },
+  { id:'f13', img:'images/poses/f13_padmasana_400.png', s:'Padmāsana',              d:'पद्मासन',             e:'Lotus Pose',                series:'Finishing', breaths:'10 to 25' },
+  { id:'f14', img:'images/poses/f14_utpluthih_400.png', s:'Utplutiḥ',              d:'उत्प्लुतिः',          e:'Scales Pose',               series:'Finishing', breaths:'10 to 25' },
+  { id:'f15', img:'images/poses/f15_savasana_400.png', s:'Śavāsana',               d:'शवासन',               e:'Corpse Pose',               series:'Finishing', hold:'10 to 20 minutes' },
 ];
+
+// ─── GAZE, REPEATS, AND WHAT FOLLOWS ─────────────────────────────────────
+// Source: ashtangayoga.info practice sheets (Dr. Ronald Steiner, 2015).
+// gaze: dṛṣṭi. rep: repeats of the hold. after: how the pose leaves
+//   v      vinyasa, then the next pose
+//   sides  vinyasa between sides, then the next pose
+//   turn   change sides, no vinyasa, then the next pose
+//   flow   straight into the next pose
+//   roll   cakrāsana (backward roll), then the next pose
+//   stand  vinyasa up to standing, then the next pose
+//   string a custom note
+const AFTER_TEXT = {
+  v:     'Vinyasa',
+  sides: 'Vinyasa between sides',
+  turn:  'Change sides',
+  flow:  'Flow into the next pose',
+  roll:  'Cakrāsana',
+  stand: 'Vinyasa to standing',
+};
+const POSE_META = {
+  p01:{ gaze:'Nose', after:'flow' },
+  p02:{ after:'flow' }, p03:{ after:'flow' },
+  p04:{ gaze:'Nose', after:'flow' }, p05:{ gaze:'Nose', after:'flow' },
+  p06:{ gaze:'Hand', after:'turn' }, p07:{ gaze:'Hand', after:'turn' },
+  p08:{ gaze:'Hand', after:'turn' }, p09:{ gaze:'Hand', after:'turn' },
+  p10:{ gaze:'Nose', after:'flow' }, p11:{ gaze:'Nose', after:'flow' }, p12:{ gaze:'Nose', after:'flow' }, p13:{ gaze:'Nose', after:'flow' },
+  p14:{ gaze:'Nose', after:'turn' },
+  p15:{ gaze:'Foot, then side', after:'turn' },
+  p16:{ gaze:'Nose', after:'Change sides, then vinyasa' },
+  p17:{ gaze:'Thumbs', after:'v' },
+  p18:{ gaze:'Thumbs', after:'turn' },
+  p19:{ gaze:'Hand', after:'Change sides, vinyasa to sitting' },
+  p20:{ gaze:'Nose', after:'flow' },
+  p21:{ gaze:'Foot', after:'flow' }, p22:{ gaze:'Foot', after:'v' }, p23:{ gaze:'Foot', after:'v' },
+  p24:{ gaze:'Third eye', after:'v' },
+  p25:{ gaze:'Foot', after:'sides' }, p26:{ gaze:'Foot', after:'sides' },
+  p27:{ gaze:'Foot', after:'sides' }, p28:{ gaze:'Foot', after:'sides' }, p29:{ gaze:'Foot', after:'sides' },
+  p30:{ gaze:'Foot', after:'sides' }, p31:{ gaze:'Nose', after:'sides' }, p32:{ gaze:'Side', after:'sides' }, p33:{ gaze:'Side', after:'sides' },
+  p34:{ gaze:'Foot', rep:'3 to 5 rounds', after:'Lift up between rounds, then vinyasa' },
+  p35:{ gaze:'Nose', after:'v' },
+  p36:{ gaze:'Nose', after:'flow' }, p37:{ gaze:'Third eye', after:'v' },
+  p38:{ gaze:'Nose', rep:'9 rolls', after:'flow' }, p39:{ gaze:'Nose', after:'v' },
+  p40:{ gaze:'Nose', after:'flow' }, p41:{ gaze:'Third eye', after:'v' },
+  p42:{ gaze:'Nose, then up', after:'v' },
+  p43:{ gaze:'Nose', after:'v' },
+  p44:{ gaze:'Foot, then side', after:'Change sides, then cakrāsana' },
+  p45:{ gaze:'Up', after:'v' },
+  p46:{ gaze:'Foot', after:'v' },
+  p47:{ gaze:'Nose', after:'Cakrāsana into the finishing poses' },
+
+  s01:{ gaze:'Side', after:'sides' },
+  s02:{ gaze:'Foot', after:'sides' },
+  s03:{ gaze:'Nose', after:'flow' }, s04:{ gaze:'Nose', after:'v' },
+  s05:{ gaze:'Nose', after:'v' },
+  s06:{ gaze:'Nose', after:'flow' },
+  s07:{ gaze:'Up, then nose', after:'Both sides, Dhanurāsana, then vinyasa' },
+  s08:{ gaze:'Nose', after:'v' },
+  s09:{ gaze:'Third eye', after:'v' },
+  s10:{ gaze:'Nose', after:'flow' }, s11:{ gaze:'Nose', after:'v' },
+  s12:{ gaze:'Nose', rep:'3 to 5 times, down and up', after:'v' },
+  s13:{ gaze:'Nose', after:'v' },
+  s14:{ gaze:'Side', after:'sides' },
+  s15:{ gaze:'Side', after:'sides' },
+  s16:{ gaze:'Nose, then foot', after:'sides' },
+  s17:{ gaze:'Nose', after:'v' },
+  s18:{ gaze:'Third eye', after:'roll' },
+  s19:{ gaze:'Nose', after:'v' },
+  s20:{ gaze:'Nose', after:'v' },
+  s21:{ gaze:'Nose', after:'stand' },
+  s22:{ gaze:'Nose', after:'stand' },
+  s23:{ gaze:'Nose', rep:'5 jumps forward and back', after:'stand' },
+  s24:{ gaze:'Up', after:'Change sides, vinyasa to standing' },
+  s25:{ gaze:'Up', after:'sides' },
+  s26:{ gaze:'Up', after:'sides' }, s27:{ gaze:'Nose', after:'sides' },
+  s28:{ gaze:'Side', after:'sides' },
+  s29:{ gaze:'Nose', after:'Vinyasa after each' },
+  s30:{ gaze:'Nose', after:'Vinyasa after each' },
+
+  f01:{ gaze:'Third eye', rep:'3 to 5 rounds', after:'Rest between rounds, then fold forward' },
+  f02:{ gaze:'Nose', after:'flow' }, f03:{ gaze:'Nose', after:'flow' }, f04:{ gaze:'Nose', after:'flow' },
+  f05:{ gaze:'Nose', after:'flow' }, f06:{ gaze:'Nose', after:'flow' },
+  f07:{ gaze:'Third eye', after:'flow' },
+  f08:{ gaze:'Third eye', after:'roll' },
+  f09:{ gaze:'Nose', after:'flow' },
+  f10:{ gaze:'Navel', rep:'Lower and lift the legs', after:'Lower down into Bālāsana' },
+  f11:{ gaze:'Nose', after:'v' },
+  f12:{ gaze:'Third eye', after:'flow' },
+  f13:{ gaze:'Nose', after:'flow' },
+  f14:{ gaze:'Nose', after:'Vinyasa, then rest' },
+  f15:{ gaze:'Eyes closed' },
+};
+[...PRIMARY, ...SECONDARY, ...FINISHING].forEach(p => Object.assign(p, POSE_META[p.id] || {}));
+
+function afterText(pose) {
+  if (!pose.after) return '';
+  return AFTER_TEXT[pose.after] || pose.after;
+}
 
 // ─── STATE ───────────────────────────────────────────────────────────────
 const st = {
@@ -2916,7 +3018,7 @@ function renderWN(idx, reset) {
 
   const pair = getWNPair();
   if (!pair) {
-    document.getElementById('wn-area').innerHTML = '<div class="done-card"><div class="done-title">Not enough poses</div><div class="done-sub">Widen Practice up to on Home, then begin again.</div></div>';
+    document.getElementById('wn-area').innerHTML = '<div class="done-card"><div class="done-title">Not enough poses</div><div class="done-sub">On Home, set Last pose you know further along, then begin again.</div></div>';
     return;
   }
   const { cur, next, seriesPool } = pair;
@@ -3101,6 +3203,52 @@ function getSeqSeries() {
   return PRIMARY.filter(x => !x.skip);
 }
 
+const NOTE_ICONS = {
+  breath: `<path d="M3 8 L10 8 C13 8 15 6.5 15 5 C15 3.7 14 3 12.5 3"/><path d="M3 12 L17 12"/><path d="M3 16 L12 16 C15 16 17 17.5 17 19 C17 20.3 16 21 14.5 21"/>`,
+  gaze:   `<path d="M2.5 12 C6 6.5 18 6.5 21.5 12 C18 17.5 6 17.5 2.5 12 Z"/><circle cx="12" cy="12" r="3"/>`,
+  // vinyasa: an arc that lifts and lands
+  arc:    `<path d="M4 17 C6 9 14 6 19 10"/><path d="M19 5.5 L19.6 10.4 L14.7 10.8"/>`,
+  // flow: a quiet straight line forward
+  flow:   `<path d="M4 12 L19 12"/><path d="M14.5 7.5 L19 12 L14.5 16.5"/>`,
+  // roll: a loop back over itself
+  roll:   `<path d="M18.5 13.5 A6.5 6.5 0 1 1 15.6 7.1"/><path d="M15.2 3.6 L16 7.5 L12.1 8.2"/>`,
+  rest:   `<path d="M4 15 C7 11 17 11 20 15"/><path d="M8 19 L16 19"/>`,
+  repeat: `<path d="M5 11 A7 7 0 0 1 17.5 7"/><path d="M17.8 3.5 L17.8 7.4 L13.9 7.4"/><path d="M19 13 A7 7 0 0 1 6.5 17"/><path d="M6.2 20.5 L6.2 16.6 L10.1 16.6"/>`,
+};
+function noteIcon(kind) {
+  return `<svg class="note-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NOTE_ICONS[kind]}</svg>`;
+}
+function afterIcon(pose) {
+  const a = pose.after || '';
+  if (a === 'flow') return 'flow';
+  if (a === 'roll' || /cakrāsana/i.test(a)) return 'roll';
+  if (/rest\.?$/i.test(a)) return 'rest';
+  return 'arc';
+}
+function gazeLine(gaze) {
+  if (gaze === 'Eyes closed') return 'Eyes closed';
+  const g = gaze.toLowerCase();
+  return g.startsWith('up') ? `Gaze ${g}` : `Gaze at the ${g}`;
+}
+function poseNotes(pose) {
+  const lines = [];
+  if (pose.hold) {
+    const h = pose.hold.charAt(0).toLowerCase() + pose.hold.slice(1);
+    lines.push(['rest', `Rest ${h}`]);
+  } else if (pose.breaths) {
+    let t = `${pose.breaths.replace(/ each side.*$/, '')} breaths`;
+    if (pose.breaths.includes('each side')) t += ' each side';
+    if (pose.rep) t += `, ${pose.rep}`;
+    lines.push([pose.rep ? 'repeat' : 'breath', t]);
+  }
+  if (pose.gaze) lines.push(['gaze', gazeLine(pose.gaze)]);
+  const after = afterText(pose);
+  if (after) lines.push([afterIcon(pose), after]);
+  if (!lines.length) return '';
+  return `<div class="pose-notes">${lines.map(([icon, text]) =>
+    `<div class="note-line">${noteIcon(icon)}<span>${text}</span></div>`).join('')}</div>`;
+}
+
 function renderSeq(idx) {
   const series = getSeqSeries();
   const total  = series.length;
@@ -3122,14 +3270,7 @@ function renderSeq(idx) {
         <div class="seq-learn-sanskrit">${pose.s}</div>
         <div class="seq-learn-devanagari">${pose.d}</div>
         <div class="seq-learn-english">${engStrPlain(pose)}</div>
-        ${pose.breaths ? `<div class="breath-strip">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex-shrink:0;opacity:0.75;">
-            <path d="M3 8 L10 8 C13 8 15 6.5 15 5 C15 3.7 14 3 12.5 3" stroke="var(--terra)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-            <path d="M3 12 L17 12" stroke="var(--terra)" stroke-width="1.6" stroke-linecap="round"/>
-            <path d="M3 16 L12 16 C15 16 17 17.5 17 19 C17 20.3 16 21 14.5 21" stroke="var(--terra)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-          </svg>
-          <span class="breath-count">${pose.breaths.replace(/ each side.*$/, '')} breaths</span>${pose.breaths.includes('each side') ? '<span class="breath-label">, each side</span>' : ''}
-        </div>` : ''}
+        ${poseNotes(pose)}
       </div>
       <div class="seq-learn-bottom">
         <div class="seq-nav">
@@ -3253,6 +3394,8 @@ const rangeSelect = document.getElementById('range-select');
 
 function populateRangePicker() {
   const series = st.series;
+  const rangeLabel = document.getElementById('range-label');
+  if (rangeLabel) rangeLabel.textContent = series === 'both' ? 'Secondary, up to' : 'Last pose you know';
   const fullLabel = series === 'primary' ? 'Full primary series'
     : series === 'secondary' ? 'Full secondary series'
     : 'Full primary and secondary series';
