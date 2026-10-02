@@ -189,7 +189,8 @@ body.splashing .bottom-nav { visibility: hidden; }
   transition: background 0.15s;
   position: relative;
 }
-.nav-btn:hover { background: rgba(255,255,255,0.05); }
+@media (hover: hover) { .nav-btn:hover { background: rgba(255,255,255,0.05); } }
+.nav-btn:active { background: rgba(196,132,90,0.18); }
 .nav-btn.active { background: rgba(196,132,90,0.14); }
 .nav-btn.nav-disabled { opacity: 0.3; cursor: pointer; }
 .nav-btn.active::before {
@@ -2579,6 +2580,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (target === 'practice') {
       if (!st.sessionLive || !st.practiceScreen) {
         toast(null, 'Begin a practice from Home.');
+        btn.blur();
         return;
       }
       showScreen(st.practiceScreen);
@@ -2591,6 +2593,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     if (target === 'screen-results') {
       if (!st.lastCompleted) {
         toast(null, 'Complete a session to see your results.');
+        btn.blur();
         return;
       }
       showResults();
