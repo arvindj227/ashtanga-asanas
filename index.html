@@ -32,7 +32,7 @@
   --radius-btn:   13px;
   --shadow-card:  0 1px 2px rgba(44,32,20,0.04), 0 6px 20px rgba(44,32,20,0.05);
   --shadow-lift:  0 8px 28px rgba(44,32,20,0.12);
-  --nav-h:        calc(58px + max(0px, var(--sab) - 32px));
+  --nav-h:        calc(58px + var(--sab));
   --ease-glass:   cubic-bezier(.32,.72,0,1);
   --ease-spring:  cubic-bezier(.34,1.42,.64,1);
   --lens:         rgba(255,255,255,0.62);
@@ -46,13 +46,17 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   touch-action: manipulation; /* disable double-tap zoom on mobile */
+  /* Home-indicator band sits outside the page. Forest matches the menu and the splash. */
+  background: var(--forest);
 }
 
 body {
   background: var(--cream); /* splash covers this at launch; Safari samples it for the status bar tint */
   font-family: var(--font-body);
   color: var(--ink);
+  /* Fill the real screen, including the home-indicator band 100dvh leaves out. */
   height: 100dvh;
+  height: -webkit-fill-available;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -199,7 +203,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 10px 2px calc(8px + max(0px, var(--sab) - 32px));
+  padding: 10px 2px calc(8px + var(--sab));
   transition: background 0.15s;
   position: relative;
 }
@@ -1872,6 +1876,7 @@ button.mode-card {
 ════════════════════════════════════ */
 #splash {
   position: fixed; inset: 0;
+  min-height: -webkit-fill-available;
   background: var(--forest);
   display: flex;
   flex-direction: column;
@@ -2046,7 +2051,7 @@ button.mode-card {
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ashtanga">
-  <meta name="theme-color" content="#F7F2ED">
+  <meta name="theme-color" content="#2C3E2D">
 </head>
 <body class="splashing">
 
@@ -3968,9 +3973,14 @@ showScreen('screen-welcome');
 // ─── SPLASH ──────────────────────────────────────────────────────────────
 (function() {
   const splash = document.getElementById('splash');
+  // One status-bar tint serves the whole page. Forest while the splash shows,
+  // and in a Safari tab, where it blends the browser bar into the menu.
+  // Installed app: cream once the splash fades, so the top melts into the page.
+  const isStandalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   setTimeout(() => {
     document.body.classList.remove('splashing'); // reveal nav + screens before fade completes
     splash.classList.add('hiding'); // fade takes 0.8s
+    if (isStandalone) document.querySelector('meta[name="theme-color"]').content = '#F7F2ED';
     setTimeout(() => { splash.classList.add('hidden'); }, 850);
   }, 3500);
 })();
