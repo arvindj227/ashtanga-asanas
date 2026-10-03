@@ -63,6 +63,24 @@ body {
   -webkit-user-select: none;
   user-select: none;
 }
+/* iOS takes the status bar tint from the body colour, so forest while the splash shows */
+body.splashing { background: var(--forest); }
+
+/* Home Screen app on iOS: 100dvh stops one status-bar height short of the screen,
+   and iOS fills that band from the body colour. Let html cover the full screen in
+   forest so the band under the menu matches it; the body stays cream for the top. */
+@media (display-mode: standalone) {
+  html {
+    height: 100lvh;
+    overflow: hidden;
+    background: var(--forest);
+  }
+}
+html.ios-standalone {
+  height: 100lvh;
+  overflow: hidden;
+  background: var(--forest);
+}
 
 /* Allow text selection on pose names and Sanskrit text */
 .seq-learn-sanskrit, .seq-learn-devanagari, .seq-learn-english,
@@ -393,8 +411,9 @@ body.splashing .bottom-nav { visibility: hidden; }
   gap: 6px;
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 1.15rem;
-  color: var(--muted);
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--ink);
   line-height: 1.2;
 }
 .name-greet { white-space: nowrap; }
@@ -408,7 +427,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   padding: 0;
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 18px; /* at least 16px so iOS does not zoom on focus */
+  font-size: 1.3rem; /* 20.8px, above the 16px iOS zoom threshold */
   font-weight: 500;
   color: var(--terra);
   text-align: left;
@@ -2046,6 +2065,7 @@ button.mode-card {
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ashtanga">
   <meta name="theme-color" content="#2C3E2D">
+  <script>if (navigator.standalone) document.documentElement.classList.add('ios-standalone');</script>
 </head>
 <body class="splashing">
 <div class="tint-bottom" aria-hidden="true"></div>
@@ -3023,7 +3043,7 @@ const nameInputRow = nameCheckBtn.parentElement;
 // The field is only as wide as the name in it, so the line stays centred
 function sizeNameInput() {
   const text = nameInput.value || nameInput.placeholder;
-  nameInput.style.width = Math.max(1.6, text.length * 0.5 + 0.15) + 'em';
+  nameInput.style.width = Math.max(1.4, text.length * 0.46 + 0.1) + 'em';
 }
 sizeNameInput();
 
