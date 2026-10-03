@@ -1046,6 +1046,12 @@ button.mode-card {
   position: relative; overflow: hidden;
   flex-shrink: 0;
 }
+/* Landscape poses: keep the row height, use the full card width instead of letterboxing into a square */
+.image-opt-thumb.wide {
+  width: 100%;
+  max-width: 156px;
+  height: 78px;
+}
 .image-opt-thumb::before {
   content: '';
   position: absolute; inset: 0;
@@ -3174,7 +3180,7 @@ function renderFC(idx) {
       <div class="image-options" id="fc-opts">
         ${opts.map(o => `
           <button class="image-opt" data-id="${o.id}" data-correct="${o.id === pose.id}">
-            <div class="image-opt-thumb" style="overflow:hidden;">${poseThumb(o)}</div>
+            <div class="image-opt-thumb${wideClass(o)}" style="overflow:hidden;">${poseThumb(o)}</div>
             <div class="image-opt-label">${o.s}</div>
           </button>`).join('')}
       </div>
