@@ -278,19 +278,10 @@ body.splashing .bottom-nav { visibility: hidden; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(30px + var(--sat)) 28px 28px;
+  padding: calc(28px + var(--sat)) 24px 22px;
   text-align: center;
   position: relative;
   overflow: hidden; /* clip the decorative ring */
-}
-
-.welcome-lockup {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  position: relative;
-  z-index: 1;
 }
 
 .welcome-ring {
@@ -309,10 +300,11 @@ body.splashing .bottom-nav { visibility: hidden; }
 }
 
 .welcome-lotus {
-  width: 56px; height: 56px;
+  width: 50px; height: 50px;
   border-radius: 50%;
   border: 1.5px solid var(--terra);
   display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
   flex-shrink: 0;
   position: relative;
   animation: fadeUp 0.5s ease both;
@@ -326,7 +318,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   border: 1px solid rgba(196,132,90,0.35);
   pointer-events: none;
 }
-.welcome-lotus svg { width: 40px; height: 40px; position: relative; z-index: 1; }
+.welcome-lotus svg { width: 36px; height: 36px; position: relative; z-index: 1; }
 
 /* pulse ring that fires on click */
 .welcome-lotus .lotus-pulse-ring {
@@ -361,26 +353,25 @@ body.splashing .bottom-nav { visibility: hidden; }
 
 .welcome-title {
   font-family: var(--font-display);
-  font-size: 1.85rem;
+  font-size: 1.95rem;
   font-weight: 400;
-  line-height: 1.02;
+  line-height: 1.1;
   color: var(--ink);
-  margin-bottom: 0;
-  text-align: center;
+  white-space: nowrap;
   animation: fadeUp 0.5s 0.08s ease both;
 }
 .welcome-title em { font-style: italic; color: var(--terra); }
 
+/* The greeting is the name field: "Namaste, ____" typed in place */
 .name-wrap {
-  width: 100%;
-  max-width: none;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--sand);
-  animation: fadeUp 0.5s 0.16s ease both;
+  margin-top: 10px;
+  min-height: 32px;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
+  animation: fadeUp 0.5s 0.16s ease both;
+  position: relative;
+  z-index: 1;
 }
 /* Label stays for the field, out of the layout. The placeholder carries it. */
 #name-label {
@@ -394,48 +385,43 @@ body.splashing .bottom-nav { visibility: hidden; }
   white-space: nowrap;
   border: 0;
 }
-.field-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 7px;
-  display: block;
-  text-align: left;
-}
-/* input row wrapper */
-.name-input-row {
-  position: relative;
-  width: 100%;
+.name-input-row,
+.name-display {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--muted);
+  line-height: 1.2;
 }
+.name-greet { white-space: nowrap; }
+/* Reads as the finished greeting: "Namaste, Yogi" until a name is typed over it */
 .name-input {
-  flex: 1;
-  min-width: 0;
-  background: var(--white);
-  border: 1.5px solid var(--sand);
-  border-radius: 11px;
-  padding: 10px 44px 10px 14px;
-  font-family: var(--font-body);
-  font-size: 16px; /* must be 16px to prevent iOS auto-zoom on focus */
-  font-weight: 300;
-  color: var(--ink);
+  width: 3.2em;
+  max-width: 60vw;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 18px; /* at least 16px so iOS does not zoom on focus */
+  font-weight: 500;
+  color: var(--terra);
+  text-align: left;
   outline: none;
-  transition: border-color 0.18s, box-shadow 0.18s;
+  caret-color: var(--terra);
 }
-.name-input:focus {
-  border-color: var(--terra);
-  box-shadow: 0 0 0 3px rgba(196,132,90,0.11);
-}
-.name-input::placeholder { color: var(--faint); }
-/* check button inside the input */
+.name-input::placeholder { color: var(--terra); opacity: 1; }
+.name-input:focus::placeholder { opacity: 0.45; }
+.name-input-row.typing .name-pencil-btn { display: none; }
 .name-check-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%; transform: translateY(-50%);
-  width: 30px; height: 30px;
-  border-radius: 8px;
+  align-self: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
   border: none;
   background: var(--terra);
   color: var(--white);
@@ -443,55 +429,33 @@ body.splashing .bottom-nav { visibility: hidden; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background 0.15s;
   flex-shrink: 0;
   padding: 0;
 }
 .name-check-btn.show { display: flex; }
 .name-check-btn:hover { background: var(--terra-dark); }
-.name-check-btn svg { width: 14px; height: 14px; }
-/* display state (after name confirmed) */
-.name-display {
-  display: none;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  min-height: 36px;
-  padding: 2px 28px 2px 2px;
-  position: relative;
-}
+.name-check-btn svg { width: 11px; height: 11px; }
+.name-display { display: none; }
 .name-display.visible { display: flex; }
-.name-display-text {
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  font-weight: 500;
-  font-style: italic;
-  color: var(--muted);
-  text-align: left;
-  line-height: 1.2;
-  letter-spacing: 0.01em;
-}
 .name-display-text em {
-  font-style: normal;
+  font-weight: 500;
   color: var(--terra);
 }
 .name-edit-btn {
+  align-self: center;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 4px;
+  margin-left: -4px;
   color: var(--faint);
   transition: color 0.15s;
-  flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   border-radius: 6px;
-  position: absolute;
-  right: -4px;
-  top: 50%;
-  transform: translateY(-50%);
 }
 @media (hover: hover) { .name-edit-btn:hover { color: var(--terra); } }
-.name-edit-btn svg { width: 12px; height: 12px; }
+.name-edit-btn svg { width: 11px; height: 11px; }
 
 .welcome-bottom {
   flex: 1 0 auto;
@@ -698,8 +662,8 @@ button.mode-card {
   .mode-grid-2 .mode-card { padding: 20px 14px 24px; }
   .mode-grid-2 .mode-desc { margin-top: 8px; }
   .mode-grid-2 { margin-bottom: 20px; }
-  .name-wrap { margin-bottom: 20px; padding-bottom: 18px; }
   .welcome-bottom { padding-top: 20px; }
+  .welcome-top { padding-top: calc(36px + var(--sat)); padding-bottom: 26px; }
 }
 .pool-row.option-split {
   display: grid;
@@ -2077,7 +2041,7 @@ button.mode-card {
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="manifest" href="site.webmanifest?v=2">
+  <link rel="manifest" href="site.webmanifest?v=3">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ashtanga">
@@ -2137,7 +2101,6 @@ button.mode-card {
   <div class="screen-scroll">
     <div class="welcome-top">
       <div class="welcome-ring"></div>
-      <div class="welcome-lockup">
       <div class="welcome-lotus">
         <svg width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
           <path d="M50 52 C46 38 42 22 50 4  C58 22 54 38 50 52Z" fill="#C4845A"/>
@@ -2150,15 +2113,15 @@ button.mode-card {
           <circle cx="50" cy="53" r="6" fill="#2C3E2D"/>
         </svg>
       </div>
-      <h1 class="welcome-title">Ashtanga<br><em>Asanas</em></h1>
-      </div>
-    </div>
-
-    <div class="welcome-bottom">
+      <h1 class="welcome-title">Ashtanga <em>Asanas</em></h1>
       <div class="name-wrap" id="name-wrap">
         <label class="field-label" for="player-name" id="name-label">Your name (optional)</label>
         <div class="name-input-row">
-          <input class="name-input" id="player-name" type="text" placeholder="Your name, optional" maxlength="28">
+          <span class="name-greet" aria-hidden="true">Namaste,</span>
+          <input class="name-input" id="player-name" type="text" placeholder="Yogi" maxlength="28" autocomplete="given-name" autocapitalize="words">
+          <button class="name-edit-btn name-pencil-btn" id="name-pencil-btn" tabindex="-1" aria-label="Enter your name">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5L11.5 4.5L5 11H3V9L9.5 2.5Z"/><line x1="8" y1="4" x2="10" y2="6"/></svg>
+          </button>
           <button class="name-check-btn" id="name-check-btn" tabindex="-1" aria-label="Confirm name">
             <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,10.5 12,3.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
@@ -2170,6 +2133,9 @@ button.mode-card {
           </button>
         </div>
       </div>
+    </div>
+
+    <div class="welcome-bottom">
       <div class="mode-grid mode-grid-2" id="mode-seg" role="group" aria-label="Practice mode, choose one or both">
         <button type="button" class="mode-card active" data-mode="flashcard" aria-pressed="true">
           <span class="mode-check" aria-hidden="true">
@@ -3051,13 +3017,25 @@ const nameDisplay  = document.getElementById('name-display');
 const nameText     = document.getElementById('name-display-text');
 const nameEditBtn  = document.getElementById('name-edit-btn');
 const nameCheckBtn = document.getElementById('name-check-btn');
+const namePencilBtn = document.getElementById('name-pencil-btn');
 const nameInputRow = nameCheckBtn.parentElement;
 
-// Show/hide the check button as user types
+// The field is only as wide as the name in it, so the line stays centred
+function sizeNameInput() {
+  const text = nameInput.value || nameInput.placeholder;
+  nameInput.style.width = Math.max(1.6, text.length * 0.5 + 0.15) + 'em';
+}
+sizeNameInput();
+
+// While typing the pencil gives way to the check
 nameInput.addEventListener('input', () => {
-  nameCheckBtn.classList.toggle('show', nameInput.value.trim().length > 0);
+  const typing = nameInput.value.trim().length > 0;
+  nameCheckBtn.classList.toggle('show', typing);
+  nameInputRow.classList.toggle('typing', typing);
+  sizeNameInput();
   st.playerName = nameInput.value.trim();
 });
+namePencilBtn.addEventListener('click', () => { nameInput.focus(); nameInput.select(); });
 
 function commitName() {
   const val = nameInput.value.trim();
@@ -3071,6 +3049,7 @@ function commitName() {
 function editName() {
   nameDisplay.classList.remove('visible');
   nameInputRow.style.display = '';
+  sizeNameInput();
   nameInput.focus();
   nameInput.select();
 }
