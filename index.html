@@ -32,7 +32,7 @@
   --radius-btn:   13px;
   --shadow-card:  0 1px 2px rgba(44,32,20,0.04), 0 6px 20px rgba(44,32,20,0.05);
   --shadow-lift:  0 8px 28px rgba(44,32,20,0.12);
-  --nav-h:        calc(58px + var(--sab));
+  --nav-h:        calc(58px + max(0px, var(--sab) - 32px));
   --ease-glass:   cubic-bezier(.32,.72,0,1);
   --ease-spring:  cubic-bezier(.34,1.42,.64,1);
   --lens:         rgba(255,255,255,0.62);
@@ -46,17 +46,14 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   touch-action: manipulation; /* disable double-tap zoom on mobile */
-  /* Home-indicator band sits outside the page. Forest matches the menu and the splash. */
-  background: var(--forest);
 }
 
 body {
-  background: var(--cream); /* splash covers this at launch; Safari samples it for the status bar tint */
+  /* Safari 26 tints the status bar from this, so the top stays cream */
+  background: var(--cream);
   font-family: var(--font-body);
   color: var(--ink);
-  /* Fill the real screen, including the home-indicator band 100dvh leaves out. */
   height: 100dvh;
-  height: -webkit-fill-available;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -91,7 +88,6 @@ body {
   body {
     --sat: 59px;
     --sab: 34px;
-    --nav-h: calc(58px + var(--sab));
     width: 393px;
     height: min(852px, calc(100vh - 32px));
     max-height: min(852px, calc(100vh - 32px));
@@ -115,6 +111,7 @@ body {
     pointer-events: none;
   }
   #splash { position: absolute; border-radius: 47px; }
+  .tint-bottom { display: none; }
   .bottom-nav { left: 0; right: 0; }
   .bottom-nav::after {
     content: '';
@@ -194,6 +191,17 @@ body.splashing .bottom-nav { visibility: hidden; }
   box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.18);
 }
 
+/* Safari 26 colours its bottom bar from a full-width fixed element at the edge.
+   This sits behind the menu so the bar and home-indicator band read forest. */
+.tint-bottom {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 12px;
+  background: var(--forest);
+  z-index: 39;
+  pointer-events: none;
+}
+
 .nav-btn {
   flex: 1;
   display: flex;
@@ -204,7 +212,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 10px 2px calc(8px + var(--sab));
+  padding: 10px 2px calc(8px + max(0px, var(--sab) - 32px));
   transition: background 0.15s;
   position: relative;
 }
@@ -270,16 +278,25 @@ body.splashing .bottom-nav { visibility: hidden; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(26px + var(--sat)) 28px 20px;
+  padding: calc(30px + var(--sat)) 28px 28px;
   text-align: center;
   position: relative;
   overflow: hidden; /* clip the decorative ring */
 }
 
+.welcome-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
 .welcome-ring {
   position: absolute;
-  top: -60px; right: -60px;
-  width: 200px; height: 200px;
+  top: -70px; right: -70px;
+  width: 170px; height: 170px;
   border-radius: 50%;
   border: 1px solid var(--sand);
   pointer-events: none;
@@ -287,16 +304,16 @@ body.splashing .bottom-nav { visibility: hidden; }
 .welcome-ring::after {
   content: '';
   position: absolute;
-  inset: 20px; border-radius: 50%;
+  inset: 18px; border-radius: 50%;
   border: 1px solid var(--sand);
 }
 
 .welcome-lotus {
-  width: 64px; height: 64px;
+  width: 56px; height: 56px;
   border-radius: 50%;
   border: 1.5px solid var(--terra);
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 12px;
+  flex-shrink: 0;
   position: relative;
   animation: fadeUp 0.5s ease both;
   cursor: pointer;
@@ -304,12 +321,12 @@ body.splashing .bottom-nav { visibility: hidden; }
 }
 .welcome-lotus::before {
   content: '';
-  position: absolute; inset: 7px;
+  position: absolute; inset: 6px;
   border-radius: 50%;
   border: 1px solid rgba(196,132,90,0.35);
   pointer-events: none;
 }
-.welcome-lotus svg { width: 48px; height: 48px; position: relative; z-index: 1; }
+.welcome-lotus svg { width: 40px; height: 40px; position: relative; z-index: 1; }
 
 /* pulse ring that fires on click */
 .welcome-lotus .lotus-pulse-ring {
@@ -344,33 +361,38 @@ body.splashing .bottom-nav { visibility: hidden; }
 
 .welcome-title {
   font-family: var(--font-display);
-  font-size: 2.05rem;
+  font-size: 1.85rem;
   font-weight: 400;
-  line-height: 1.05;
+  line-height: 1.02;
   color: var(--ink);
-  margin-bottom: 8px;
+  margin-bottom: 0;
+  text-align: center;
   animation: fadeUp 0.5s 0.08s ease both;
 }
 .welcome-title em { font-style: italic; color: var(--terra); }
 
-.welcome-sub {
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 20px;
-  animation: fadeUp 0.5s 0.12s ease both;
-}
-
 .name-wrap {
   width: 100%;
-  max-width: 260px;
+  max-width: none;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--sand);
   animation: fadeUp 0.5s 0.16s ease both;
-  /* keep everything centred as a unit */
   display: flex;
   flex-direction: column;
   align-items: stretch;
+}
+/* Label stays for the field, out of the layout. The placeholder carries it. */
+#name-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 .field-label {
   font-size: 0.62rem;
@@ -394,7 +416,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   background: var(--white);
   border: 1.5px solid var(--sand);
   border-radius: 11px;
-  padding: 12px 44px 12px 16px;
+  padding: 10px 44px 10px 14px;
   font-family: var(--font-body);
   font-size: 16px; /* must be 16px to prevent iOS auto-zoom on focus */
   font-weight: 300;
@@ -432,19 +454,20 @@ body.splashing .bottom-nav { visibility: hidden; }
 .name-display {
   display: none;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  padding: 4px 0;
+  min-height: 36px;
+  padding: 2px 28px 2px 2px;
   position: relative;
 }
 .name-display.visible { display: flex; }
 .name-display-text {
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 500;
   font-style: italic;
-  color: var(--ink);
-  text-align: center;
+  color: var(--muted);
+  text-align: left;
   line-height: 1.2;
   letter-spacing: 0.01em;
 }
@@ -471,10 +494,10 @@ body.splashing .bottom-nav { visibility: hidden; }
 .name-edit-btn svg { width: 12px; height: 12px; }
 
 .welcome-bottom {
-  flex: 0 0 auto;
+  flex: 1 0 auto;
   background: var(--white);
   border-top: 1px solid var(--sand);
-  padding: 20px 22px 12px;
+  padding: 16px 18px 16px;
   animation: fadeUp 0.5s 0.2s ease both;
 }
 
@@ -593,8 +616,8 @@ body.splashing .bottom-nav { visibility: hidden; }
 
 .mode-grid-2 {
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 button.mode-card {
   font: inherit;
@@ -608,7 +631,7 @@ button.mode-card {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  padding: 11px 12px 11px;
+  padding: 16px 14px 18px;
   color: var(--terra);
 }
 .mode-title {
@@ -633,12 +656,12 @@ button.mode-card {
 }
 .mode-grid-2 .mode-desc {
   display: block;
-  margin-top: 4px;
+  margin-top: 5px;
   font-family: var(--font-body);
   font-style: normal;
-  font-size: 0.76rem;
+  font-size: 0.84rem;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--muted);
 }
 
@@ -671,6 +694,13 @@ button.mode-card {
 @media (max-width: 350px) {
   .mode-grid-2 .mode-icon-svg { display: none; }
 }
+@media (min-height: 760px) {
+  .mode-grid-2 .mode-card { padding: 20px 14px 24px; }
+  .mode-grid-2 .mode-desc { margin-top: 8px; }
+  .mode-grid-2 { margin-bottom: 20px; }
+  .name-wrap { margin-bottom: 20px; padding-bottom: 18px; }
+  .welcome-bottom { padding-top: 20px; }
+}
 .pool-row.option-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -681,7 +711,7 @@ button.mode-card {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 11px 14px;
+  padding: 13px 14px;
   min-width: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -1482,7 +1512,7 @@ button.mode-card {
   background: var(--white);
 }
 .pool-row {
-  padding: 11px 14px;
+  padding: 13px 14px;
   border-bottom: 1px solid var(--sand);
   position: relative;
 }
@@ -1877,7 +1907,6 @@ button.mode-card {
 ════════════════════════════════════ */
 #splash {
   position: fixed; inset: 0;
-  min-height: -webkit-fill-available;
   background: var(--forest);
   display: flex;
   flex-direction: column;
@@ -2055,6 +2084,7 @@ button.mode-card {
   <meta name="theme-color" content="#2C3E2D">
 </head>
 <body class="splashing">
+<div class="tint-bottom" aria-hidden="true"></div>
 
 <!-- TOAST -->
 
@@ -2107,6 +2137,7 @@ button.mode-card {
   <div class="screen-scroll">
     <div class="welcome-top">
       <div class="welcome-ring"></div>
+      <div class="welcome-lockup">
       <div class="welcome-lotus">
         <svg width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
           <path d="M50 52 C46 38 42 22 50 4  C58 22 54 38 50 52Z" fill="#C4845A"/>
@@ -2120,11 +2151,14 @@ button.mode-card {
         </svg>
       </div>
       <h1 class="welcome-title">Ashtanga<br><em>Asanas</em></h1>
-      <p class="welcome-sub">Learn the series</p>
+      </div>
+    </div>
+
+    <div class="welcome-bottom">
       <div class="name-wrap" id="name-wrap">
         <label class="field-label" for="player-name" id="name-label">Your name (optional)</label>
         <div class="name-input-row">
-          <input class="name-input" id="player-name" type="text" placeholder="Yogi" maxlength="28">
+          <input class="name-input" id="player-name" type="text" placeholder="Your name, optional" maxlength="28">
           <button class="name-check-btn" id="name-check-btn" tabindex="-1" aria-label="Confirm name">
             <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,10.5 12,3.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
@@ -2136,9 +2170,6 @@ button.mode-card {
           </button>
         </div>
       </div>
-    </div>
-
-    <div class="welcome-bottom">
       <div class="mode-grid mode-grid-2" id="mode-seg" role="group" aria-label="Practice mode, choose one or both">
         <button type="button" class="mode-card active" data-mode="flashcard" aria-pressed="true">
           <span class="mode-check" aria-hidden="true">
@@ -3018,7 +3049,6 @@ modeCards.forEach(c => {
 const nameInput    = document.getElementById('player-name');
 const nameDisplay  = document.getElementById('name-display');
 const nameText     = document.getElementById('name-display-text');
-const nameLabel    = document.getElementById('name-label');
 const nameEditBtn  = document.getElementById('name-edit-btn');
 const nameCheckBtn = document.getElementById('name-check-btn');
 const nameInputRow = nameCheckBtn.parentElement;
@@ -3034,7 +3064,6 @@ function commitName() {
   if (!val) return;
   nameText.innerHTML = 'Namaste, <em>' + val + '</em>';
   nameInputRow.style.display = 'none';
-  nameLabel.style.display = 'none';
   nameDisplay.classList.add('visible');
   // Do NOT call nameInput.blur() — it triggers a mobile viewport resize
   // that corrupts the layout of all other screens
@@ -3042,7 +3071,6 @@ function commitName() {
 function editName() {
   nameDisplay.classList.remove('visible');
   nameInputRow.style.display = '';
-  nameLabel.style.display = 'block';
   nameInput.focus();
   nameInput.select();
 }
@@ -3974,14 +4002,9 @@ showScreen('screen-welcome');
 // ─── SPLASH ──────────────────────────────────────────────────────────────
 (function() {
   const splash = document.getElementById('splash');
-  // One status-bar tint serves the whole page. Forest while the splash shows,
-  // and in a Safari tab, where it blends the browser bar into the menu.
-  // Installed app: cream once the splash fades, so the top melts into the page.
-  const isStandalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   setTimeout(() => {
     document.body.classList.remove('splashing'); // reveal nav + screens before fade completes
     splash.classList.add('hiding'); // fade takes 0.8s
-    if (isStandalone) document.querySelector('meta[name="theme-color"]').content = '#F7F2ED';
     setTimeout(() => { splash.classList.add('hidden'); }, 850);
   }, 3500);
 })();
