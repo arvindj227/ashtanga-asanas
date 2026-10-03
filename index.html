@@ -32,7 +32,7 @@
   --radius-btn:   13px;
   --shadow-card:  0 1px 2px rgba(44,32,20,0.04), 0 6px 20px rgba(44,32,20,0.05);
   --shadow-lift:  0 8px 28px rgba(44,32,20,0.12);
-  --nav-h:        calc(58px + max(0px, var(--sab) - 32px));
+  --nav-h:        calc(58px + max(0px, var(--sab) - 26px));
   --ease-glass:   cubic-bezier(.32,.72,0,1);
   --ease-spring:  cubic-bezier(.34,1.42,.64,1);
   --lens:         rgba(255,255,255,0.62);
@@ -230,7 +230,7 @@ body.splashing .bottom-nav { visibility: hidden; }
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 10px 2px calc(8px + max(0px, var(--sab) - 32px));
+  padding: 10px 2px calc(8px + max(0px, var(--sab) - 26px));
   transition: background 0.15s;
   position: relative;
 }
@@ -1708,6 +1708,7 @@ button.mode-card {
   font-size: 2.05rem; font-weight: 400;
   line-height: 1.08; color: var(--ink);
   margin-bottom: 18px;
+  text-wrap: balance; /* long names wrap to two even lines instead of one orphaned word */
   animation: fadeUp 0.5s 0.12s ease both;
 }
 .results-title em { font-style: italic; color: var(--terra); }
@@ -2396,7 +2397,7 @@ button.mode-card {
         </svg>
       </div>
       <p class="results-greeting">Practice complete</p>
-      <h2 class="results-title" id="results-title">Well<br>done, <em>you</em></h2>
+      <h2 class="results-title" id="results-title">Well done, <em>you</em></h2>
       <div class="results-stats">
         <div class="results-stats-numbers">
           <div class="stat-block"><div class="stat-num good" id="res-correct">0</div><div class="stat-lbl">Correct</div></div>
@@ -3789,7 +3790,7 @@ function showResults() {
 
   // Sequence mode has no score
   if (isSeq) {
-    document.getElementById('results-title').innerHTML = `Keep<br><em>practising</em>`;
+    document.getElementById('results-title').innerHTML = `Keep <em>practising</em>`;
     document.getElementById('res-correct').textContent = '—';
     document.getElementById('res-wrong').textContent   = '—';
     document.getElementById('res-pct').textContent     = '—';
@@ -3803,7 +3804,7 @@ function showResults() {
 
   // No cards answered yet
   if (answered === 0) {
-    document.getElementById('results-title').innerHTML = `Practice<br><em>awaits</em>`;
+    document.getElementById('results-title').innerHTML = `Practice <em>awaits</em>`;
     document.getElementById('res-correct').textContent = '—';
     document.getElementById('res-wrong').textContent   = '—';
     document.getElementById('res-pct').textContent     = '—';
@@ -3814,7 +3815,7 @@ function showResults() {
   }
 
   document.getElementById('results-title').innerHTML =
-    st.playerName ? `Well<br>done, <em>${st.playerName}</em>` : `Well<br>done, <em>Yogi</em>`;
+    st.playerName ? `Well done, <em>${st.playerName}</em>` : `Well done, <em>Yogi</em>`;
   document.getElementById('res-correct').textContent = src.correct;
   document.getElementById('res-wrong').textContent   = src.wrong;
   document.getElementById('res-pct').textContent     = `${pct}%`;
