@@ -581,7 +581,8 @@ input[type=range]::-moz-range-thumb {
   }
   const PAD_MAX = 0.05;
   const padLevel = f => S.sound === 'guided' ? PAD_MAX * (0.06 + 0.94 * f) : PAD_MAX * (0.25 + 0.75 * f);
-  const padFreq  = f => lerp(164.8, 196.0, f);              // E3 to G3
+  // Pitch stays still. A note that rises as it swells and falls as it recedes sounds like an engine.
+  const padFreq  = () => 174.6;                             // F3, one held tone
 
   function restartParam(param, t) {
     param.cancelScheduledValues(t);
