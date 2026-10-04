@@ -278,17 +278,41 @@ body::before {
 }
 .seg button[aria-pressed="true"] { color: var(--bg); }
 
+/* A quiet line of the current settings, with the same round icon as the theme button as the way in. */
 .summary {
-  font: 500 1.08rem var(--font-display);
-  letter-spacing: .01em;
-  color: var(--fg-muted);
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 2px 2px 2px 8px;
   border: 0;
-  padding: 6px 10px;
+  background: none;
   cursor: pointer;
+  font: 400 .88rem var(--font-body);
+  letter-spacing: .02em;
+  color: var(--fg-muted);
   transition: color .3s ease;
 }
-.summary:hover { color: var(--fg); }
+.summary #summary-text { display: inline-flex; gap: 14px; }
+.summary #summary-text b { font-weight: 400; color: var(--fg-soft); }
+.summary .tune {
+  width: 32px; height: 32px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid; place-items: center;
+  transition: border-color .3s ease, color .3s ease;
+}
+.summary svg {
+  width: 15px; height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.summary:hover, .summary:focus-visible { color: var(--fg-soft); }
+.summary:hover .tune, .summary:focus-visible .tune,
+body.sheet-open .summary .tune { border-color: var(--fg-faint); color: var(--fg); }
 
 /* Settings sheet */
 .sheet-scrim {
@@ -411,8 +435,11 @@ input[type=range]::-moz-range-thumb {
       <button data-sound="tone" aria-pressed="false">Tone</button>
       <button data-sound="guided" aria-pressed="false">Guided</button>
     </div>
-    <button class="summary" id="btn-settings" aria-expanded="false">
-      <span id="summary-text">5 s breath, 0.6 s rest, 5 breaths</span>
+    <button class="summary" id="btn-settings" aria-expanded="false" aria-label="Edit breath, rest, and count">
+      <span id="summary-text"></span>
+      <span class="tune" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 8h9M17 8h3M4 16h3M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="9" cy="16" r="2"/></svg>
+      </span>
     </button>
   </footer>
 </main>
@@ -494,7 +521,7 @@ input[type=range]::-moz-range-thumb {
     phaseStart: 0,
     phaseElapsed: 0,        // for pause / resume
     fullness: 0,            // 0..1
-    inhale: 5, exhale: 5, holdTop: .6, holdBottom: .25,
+    inhale: 5, exhale: 5, holdTop: .6, holdBottom: .5,
     target: 5, count: 0,
     sound: 'off',           // off | tone | guided
     theme: 'dusk',
@@ -558,9 +585,22 @@ input[type=range]::-moz-range-thumb {
   }
 
   // Audio. S.sound is 'off' | 'tone' | 'guided'.
-  // 'tone' is one voice that swells and sinks with the breath, for eyes open.
-  // 'guided' is the same voice, with silence through the hold. The quiet is the cue to pause.
-  let actx = null, osc = null, gain = null, master = null;
+  // Two fixed notes, a major sixth apart. B3 on the inhale, D3 on the exhale.
+  // They overlap only for a short moment as the inhale gives way to the exhale.
+  // The exhale note then finishes and goes quiet before the next inhale begins.
+  // In Guided the rest at the top is silence as well. Neither note ever slides in pitch.
+  let actx = null, sunGain = null, moonGain = null, master = null;
+  function makeVoice(hz) {
+    const g = actx.createGain(); g.gain.value = 0;
+    const real = new Float32Array([0, 0, 0, 0]);
+    const imag = new Float32Array([0, 1, 0.12, 0.03]);   // fundamental, a little octave, a trace of the 3rd
+    const osc = actx.createOscillator();
+    osc.setPeriodicWave(actx.createPeriodicWave(real, imag, { disableNormalization: true }));
+    osc.frequency.value = hz;
+    osc.connect(g); g.connect(master);
+    osc.start();
+    return g;
+  }
   function ensureAudio() {
     if (actx) return;
     actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -568,27 +608,16 @@ input[type=range]::-moz-range-thumb {
     if (navigator.audioSession) navigator.audioSession.type = 'playback';
     master = actx.createGain(); master.gain.value = 1;
     master.connect(actx.destination);
-
-    // One held tone, B3. Fundamental plus a little octave (2nd) and a trace of the 3rd:
-    // a soft bowed quality with nothing bell-like above it. Only the volume breathes.
-    gain = actx.createGain(); gain.gain.value = 0;
-    const real = new Float32Array([0, 0, 0, 0]);
-    const imag = new Float32Array([0, 1, 0.12, 0.03]);
-    osc = actx.createOscillator();
-    osc.setPeriodicWave(actx.createPeriodicWave(real, imag, { disableNormalization: true }));
-    osc.frequency.value = TONE_HZ;
-    osc.connect(gain); gain.connect(master);
-    osc.start();
+    sunGain = makeVoice(246.94);    // B3, the inhale
+    moonGain = makeVoice(146.83);   // D3, a major sixth below, the exhale
   }
-  const TONE_HZ = 247;                                      // B3
-  // Peak around -18 dBFS; the phone's volume does the rest.
+  // Peak of one note around -18 dBFS. The phone's volume does the rest.
   const PAD_MAX = 0.12;
-  // The swell is shaped in decibels, not amplitude, so the ear hears an even rise across the
-  // whole inhale instead of a jump at the start. Tone spans 20 dB (Eddie Stern's swell is about
-  // 15 dB); Guided goes deeper, so the exhale sinks toward the silence of the hold.
-  const padLevel = f => {
-    const swingDb = S.sound === 'guided' ? 30 : 20;
-    return PAD_MAX * Math.pow(10, -swingDb * (1 - f) / 20);
+  // Shaped in decibels, so the rise is spread across the breath. 24 dB in Tone, 30 in Guided.
+  const level = f => {
+    const x = Math.min(1, Math.max(0, f));
+    const swingDb = S.sound === 'guided' ? 30 : 24;
+    return PAD_MAX * Math.pow(10, -swingDb * (1 - x) / 20);
   };
 
   function restartParam(param, t) {
@@ -598,34 +627,77 @@ input[type=range]::-moz-range-thumb {
   function curve(N, fn) { const a = new Float32Array(N); for (let i = 0; i < N; i++) a[i] = fn(i / (N - 1)); return a; }
 
   // Scheduled on the audio clock per phase, so it stays in time even if the screen stutters.
-  function schedulePad(phase, remainingMs, fFrom) {
+  function schedulePad(phase, remainingMs) {
     if (S.sound === 'off' || !actx) return;
     const t = actx.currentTime;
-    const lead = 0.12;                                       // glide from wherever we are, avoids clicks
-    const d = Math.max(0.02, remainingMs / 1000);
+    const lead = 0.12;
+    const d = Math.max(0.05, remainingMs / 1000);
+    const total = Math.max(d, durationOf(phase) / 1000);
     const span = Math.max(0.02, d - lead - 0.002);
     const t0 = t + lead + 0.001;
     const guided = S.sound === 'guided';
-    restartParam(gain.gain, t);
+    // Where we are in the whole phase, so a resume does not replay the envelope from the start.
+    const uOf = p => Math.min(1, ((total - d) + lead + p * span) / total);
+    restartParam(sunGain.gain, t);
+    restartParam(moonGain.gain, t);
 
-    const fAt = phase === 'inhale' ? p => fFrom + (1 - fFrom) * easeIn(p)
-              : phase === 'exhale' ? p => fFrom * easeOut(p)
-              : () => (phase === 'top' ? 1 : 0);
+    if (guided && phase === 'top') {
+      sunGain.gain.linearRampToValueAtTime(0, t + 0.35);
+      moonGain.gain.linearRampToValueAtTime(0, t + 0.35);
+      return;
+    }
 
-    if (phase === 'inhale' || phase === 'exhale') {
-      gain.gain.linearRampToValueAtTime(padLevel(fAt(0)), t + lead);
-      gain.gain.setValueCurveAtTime(curve(48, p => padLevel(fAt(p))), t0, span);
-    } else if (guided && phase === 'top') {
-      gain.gain.linearRampToValueAtTime(0, t + 0.35);        // silence at the top: the quiet is the hold
+    const rise = Math.min(0.6, total * 0.2);
+    const fall = Math.min(0.95, total * 0.26);
+    const hand = Math.min(0.45, total * 0.18);
+    const moonExhale = u => {
+      const tSec = u * total;
+      const fallStart = Math.max(rise + 0.2, total - fall);
+      if (tSec <= rise) return level(tSec / Math.max(0.05, rise));
+      if (tSec <= fallStart) return PAD_MAX;
+      const k = Math.min(1, (tSec - fallStart) / Math.max(0.05, total - fallStart));
+      return PAD_MAX * Math.cos(k * Math.PI / 2);
+    };
+    const sunExhale = u => {
+      if (guided) return 0;
+      const tSec = u * total;
+      if (tSec >= hand) return 0;
+      return PAD_MAX * Math.cos((tSec / hand) * Math.PI / 2);
+    };
+
+    let sunAt, moonAt, moving;
+    if (phase === 'inhale') {
+      sunAt = p => level(easeIn(uOf(p)));
+      moonAt = () => 0;
+      moving = true;
+    } else if (phase === 'exhale') {
+      sunAt = p => sunExhale(uOf(p));
+      moonAt = p => moonExhale(uOf(p));
+      moving = true;
+    } else if (phase === 'top') {
+      sunAt = () => PAD_MAX;
+      moonAt = () => 0;
+      moving = false;
     } else {
-      gain.gain.linearRampToValueAtTime(padLevel(fAt(0)), t + lead);
+      sunAt = () => 0;
+      moonAt = () => 0;
+      moving = false;
+    }
+
+    sunGain.gain.linearRampToValueAtTime(sunAt(0), t + lead);
+    moonGain.gain.linearRampToValueAtTime(moonAt(0), t + lead);
+    if (moving) {
+      sunGain.gain.setValueCurveAtTime(curve(64, sunAt), t0, span);
+      moonGain.gain.setValueCurveAtTime(curve(64, moonAt), t0, span);
     }
   }
   function audioOff() {
     if (!actx) return;
     const t = actx.currentTime;
-    restartParam(gain.gain, t);
-    gain.gain.setTargetAtTime(0, t, 0.2);
+    [sunGain, moonGain].forEach(g => {
+      restartParam(g.gain, t);
+      g.gain.setTargetAtTime(0, t, 0.2);
+    });
   }
   // Loop
   function durationOf(phase) {
@@ -640,7 +712,7 @@ input[type=range]::-moz-range-thumb {
     if (phase === 'inhale' && S.target && S.count >= S.target) { finish(); return; }
     showLabel(phase);
     renderCounter();
-    schedulePad(phase, durationOf(phase), (phase === 'inhale' || phase === 'bottom') ? 0 : 1);
+    schedulePad(phase, durationOf(phase));
   }
 
   function frame(now) {
@@ -675,7 +747,7 @@ input[type=range]::-moz-range-thumb {
     else {
       S.phaseStart = now - S.phaseElapsed;
       showLabel(S.phase);
-      schedulePad(S.phase, durationOf(S.phase) - S.phaseElapsed, S.fullness);
+      schedulePad(S.phase, durationOf(S.phase) - S.phaseElapsed);
     }
     renderCounter();
     requestAnimationFrame(frame);
@@ -745,8 +817,9 @@ input[type=range]::-moz-range-thumb {
 
   const fmt = v => `${parseFloat(v)} s`;
   function renderSummary() {
-    const n = S.target ? `${S.target} breaths` : 'open count';
-    el.summary.textContent = `${fmt(S.inhale)} breath, ${fmt(S.holdTop)} rest, ${n}`;
+    const n = S.target ? `<b>${S.target}</b> breaths` : '<b>open</b> count';
+    el.summary.innerHTML =
+      `<span><b>${fmt(S.inhale)}</b> breath</span><span><b>${fmt(S.holdTop)}</b> rest</span><span>${n}</span>`;
   }
   el.len.addEventListener('input', () => {
     S.inhale = S.exhale = parseFloat(el.len.value);
@@ -773,7 +846,7 @@ input[type=range]::-moz-range-thumb {
     el.soundChips.querySelectorAll('button').forEach(c => c.setAttribute('aria-pressed', c.dataset.sound === S.sound));
     if (S.sound !== 'off') {
       ensureAudio(); actx.resume();
-      if (S.running) schedulePad(S.phase, durationOf(S.phase) - (performance.now() - S.phaseStart), S.fullness);
+      if (S.running) schedulePad(S.phase, durationOf(S.phase) - (performance.now() - S.phaseStart));
     } else audioOff();
   }
   el.soundChips.addEventListener('click', e => {
