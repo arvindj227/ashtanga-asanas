@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Breath, a pacer study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,7 +48,7 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
-body { overflow-y: auto; }
+body { overflow-y: auto; touch-action: pan-y; }
 
 body {
   font-family: var(--font-body);
@@ -560,7 +560,7 @@ input[type=range]::-moz-range-thumb {
   // Audio. S.sound is 'off' | 'tone' | 'guided'.
   // 'tone' is one voice that swells and sinks with the breath, for eyes open.
   // 'guided' is the same voice, with silence through the hold. The quiet is the cue to pause.
-  let actx = null, osc = null, osc2 = null, gain = null, master = null;
+  let actx = null, osc = null, gain = null, master = null;
   function ensureAudio() {
     if (actx) return;
     actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -569,20 +569,27 @@ input[type=range]::-moz-range-thumb {
     master = actx.createGain(); master.gain.value = 1;
     master.connect(actx.destination);
 
-    // Tone: the inhale. Sine with a quiet octave below, lowpassed.
+    // One held tone, B3. Fundamental plus a little octave (2nd) and a trace of the 3rd:
+    // a soft bowed quality with nothing bell-like above it. Only the volume breathes.
     gain = actx.createGain(); gain.gain.value = 0;
-    const filt = actx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 520;
-    osc = actx.createOscillator(); osc.type = 'sine'; osc.frequency.value = 174.6;      // F3
-    osc2 = actx.createOscillator(); osc2.type = 'triangle'; osc2.frequency.value = 87.3; // F2
-    const g2 = actx.createGain(); g2.gain.value = .35;
-    osc.connect(filt); osc2.connect(g2); g2.connect(filt);
-    filt.connect(gain); gain.connect(master);
-    osc.start(); osc2.start();
+    const real = new Float32Array([0, 0, 0, 0]);
+    const imag = new Float32Array([0, 1, 0.12, 0.03]);
+    osc = actx.createOscillator();
+    osc.setPeriodicWave(actx.createPeriodicWave(real, imag, { disableNormalization: true }));
+    osc.frequency.value = TONE_HZ;
+    osc.connect(gain); gain.connect(master);
+    osc.start();
   }
-  const PAD_MAX = 0.05;
-  const padLevel = f => S.sound === 'guided' ? PAD_MAX * (0.06 + 0.94 * f) : PAD_MAX * (0.25 + 0.75 * f);
-  // Pitch stays still. A note that rises as it swells and falls as it recedes sounds like an engine.
-  const padFreq  = () => 174.6;                             // F3, one held tone
+  const TONE_HZ = 247;                                      // B3
+  // Peak around -18 dBFS; the phone's volume does the rest.
+  const PAD_MAX = 0.12;
+  // The swell is shaped in decibels, not amplitude, so the ear hears an even rise across the
+  // whole inhale instead of a jump at the start. Tone spans 20 dB (Eddie Stern's swell is about
+  // 15 dB); Guided goes deeper, so the exhale sinks toward the silence of the hold.
+  const padLevel = f => {
+    const swingDb = S.sound === 'guided' ? 30 : 20;
+    return PAD_MAX * Math.pow(10, -swingDb * (1 - f) / 20);
+  };
 
   function restartParam(param, t) {
     param.cancelScheduledValues(t);
@@ -599,7 +606,7 @@ input[type=range]::-moz-range-thumb {
     const span = Math.max(0.02, d - lead - 0.002);
     const t0 = t + lead + 0.001;
     const guided = S.sound === 'guided';
-    [gain.gain, osc.frequency].forEach(p => restartParam(p, t));
+    restartParam(gain.gain, t);
 
     const fAt = phase === 'inhale' ? p => fFrom + (1 - fFrom) * easeIn(p)
               : phase === 'exhale' ? p => fFrom * easeOut(p)
@@ -607,14 +614,11 @@ input[type=range]::-moz-range-thumb {
 
     if (phase === 'inhale' || phase === 'exhale') {
       gain.gain.linearRampToValueAtTime(padLevel(fAt(0)), t + lead);
-      osc.frequency.linearRampToValueAtTime(padFreq(fAt(0)), t + lead);
       gain.gain.setValueCurveAtTime(curve(48, p => padLevel(fAt(p))), t0, span);
-      osc.frequency.setValueCurveAtTime(curve(48, p => padFreq(fAt(p))), t0, span);
     } else if (guided && phase === 'top') {
       gain.gain.linearRampToValueAtTime(0, t + 0.35);        // silence at the top: the quiet is the hold
     } else {
       gain.gain.linearRampToValueAtTime(padLevel(fAt(0)), t + lead);
-      osc.frequency.linearRampToValueAtTime(padFreq(fAt(0)), t + lead);
     }
   }
   function audioOff() {
@@ -721,6 +725,17 @@ input[type=range]::-moz-range-thumb {
   }
   ['pointermove', 'pointerdown', 'keydown', 'touchstart'].forEach(ev =>
     window.addEventListener(ev, showControls, { passive: true }));
+
+  // iOS Safari ignores user-scalable=no. Block pinch and double-tap zoom directly,
+  // since tapping the disc repeatedly must never change the page scale.
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev =>
+    document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTouchEnd < 350) e.preventDefault();
+    lastTouchEnd = now;
+  }, { passive: false });
 
   // Wire up
   el.disc.addEventListener('click', () => S.running ? pause() : start());
