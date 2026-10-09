@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@400;500&family=Noto+Serif+Devanagari:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="study.css">
+</head>
+<body>
+<header class="app-head">
+  <h1>Study</h1>
+  <p>Learn the tradition. Recall it when you are ready.</p>
+</header>
+
+<main class="app-main">
+  <div id="view-hub" class="view">
+    <div class="seg" role="tablist">
+      <button type="button" id="tab-learn" class="on" role="tab" aria-selected="true">Learn</button>
+      <button type="button" id="tab-recall" role="tab" aria-selected="false">Recall</button>
+    </div>
+    <div id="hub-list"></div>
+  </div>
+
+  <div id="view-drill" class="view hidden">
+    <button type="button" id="btn-back" class="drill-back">← All topics</button>
+    <div class="card drill-card">
+      <h2 class="drill-topic" id="drill-title"></h2>
+      <div id="drill-body"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="app-foot">
+  <a href="../index.html">Back to the app</a>
+</footer>
+
+<script src="poses-data.js"></script>
+<script src="vinyasa-counts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

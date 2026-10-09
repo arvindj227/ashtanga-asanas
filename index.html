@@ -2919,6 +2919,24 @@ function isDeckDone(screen) {
 
 
 
+// Hidden Study page: tap Home three times, then Results three times.
+(function () {
+  const SEQ = ['screen-welcome', 'screen-welcome', 'screen-welcome', 'screen-results', 'screen-results', 'screen-results'];
+  let step = 0;
+  let resetTimer = null;
+  window._bumpStudySecret = nav => {
+    if (nav === SEQ[step]) {
+      step += 1;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { step = 0; }, 12000);
+      if (step >= SEQ.length) {
+        step = 0;
+        location.href = 'study/index.html';
+      }
+    } else step = nav === SEQ[0] ? 1 : 0;
+  };
+})();
+
 // Nav buttons
 document.querySelectorAll('.nav-btn').forEach(btn => {
   const release = () => {
@@ -2937,6 +2955,9 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 
   btn.addEventListener('click', () => {
     const target = btn.dataset.nav;
+    if (target === 'screen-welcome' || target === 'screen-results') {
+      window._bumpStudySecret(target);
+    }
 
     if (target === 'practice') {
       if (!st.sessionLive || !st.practiceScreen) {
@@ -2970,7 +2991,7 @@ const CORRECT_MSGS = [
   'Beautiful.', 'Well remembered.', 'Lovely.',
   'Yes, that\'s it.', 'Wonderful.', 'Exactly right.',
   'Your practice is blooming.', 'Yes.',
-  'The body remembers.', 'Svadhyaya — self-study working.',
+  'The body remembers.', 'Svadhyaya: self-study working.',
   'Steady and bright.', 'That\'s the one.',
   'The name is yours now.', 'Effortless.',
   'Svādhyāya.', 'The series is taking root.',
