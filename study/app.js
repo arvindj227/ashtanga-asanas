@@ -703,42 +703,66 @@
     paintCountLearn();
   }
 
-  function paintCountLearn() {
+  function countStepHtml(round) {
+    const step = round.steps[stepAt];
+    const [n, breath, move] = step;
+    const [sa, dev] = countName(n, breath);
+    const held = n > 0 && round.holds.includes(n);
+    return `
+      <div class="count-now">
+        <div class="count-sa-row">
+          <div class="sa">${sa}</div>
+          ${countDevHtml(dev)}
+        </div>
+        <div class="move"><span class="breath">${breath}</span> ${move}</div>
+        ${held ? '<div class="hold-note">This is the pose.</div>' : ''}
+      </div>
+      <div class="pips">
+        ${round.steps.map((s, i) =>
+          `<button type="button" data-i="${i}" class="${i === stepAt ? 'on' : ''} ${s[0] > 0 && round.holds.includes(s[0]) ? 'hold' : ''}">${s[0] || (s[1] === 'Rest' ? 'R' : 'S')}</button>`).join('')}
+      </div>
+      ${navSteps(stepAt, round.steps.length - 1)}`;
+  }
+
+  function bindCountStepNav(round) {
+    drillBody.querySelectorAll('.pips button').forEach(b => {
+      b.onclick = () => {
+        stepAt = +b.dataset.i;
+        paintCountLearn({ stepOnly: true });
+      };
+    });
+    const prev = drillBody.querySelector('#step-prev');
+    const next = drillBody.querySelector('#step-next');
+    if (prev) prev.onclick = () => { stepAt--; paintCountLearn({ stepOnly: true }); };
+    if (next) next.onclick = () => { stepAt++; paintCountLearn({ stepOnly: true }); };
+  }
+
+  function refreshCountLearnStep(round) {
+    const panel = drillBody.querySelector('#count-learn-panel');
+    if (!panel) return false;
+    panel.innerHTML = countStepHtml(round);
+    bindCountStepNav(round);
+    return true;
+  }
+
+  function paintCountLearn({ stepOnly = false } = {}) {
     const pose = ALL_POSES[poseAt];
     const round = window.VINYASA[pose.id];
     const nav = navPoses(poseAt);
+    if (stepOnly && round && refreshCountLearnStep(round)) return;
     setDrillTools(learnJumpTools(poseAt, ALL_POSES));
     setStudyProgress(`Pose ${poseAt + 1} of ${ALL_POSES.length}`, poseAt + 1, ALL_POSES.length);
     if (round) {
-      const step = round.steps[stepAt];
-      const [n, breath, move] = step;
-      const [sa, dev] = countName(n, breath);
-      const held = n > 0 && round.holds.includes(n);
       drillBody.innerHTML = `
-        ${poseFig(pose.img)}
-        <div class="pose-name">${pose.s}${devHtml(pose.d)}</div>
-        <div class="count-panel">
-          <div class="count-now">
-            <div class="count-sa-row">
-              <div class="sa">${sa}</div>
-              ${countDevHtml(dev)}
-            </div>
-            <div class="move"><span class="breath">${breath}</span> ${move}</div>
-            ${held ? '<div class="hold-note">This is the pose.</div>' : ''}
+        <div id="count-learn-shell" data-pose-id="${pose.id}">
+          ${poseFig(pose.img, 'decoding="async"')}
+          <div class="pose-name">${pose.s}${devHtml(pose.d)}</div>
+          <div class="count-panel" id="count-learn-panel">
+            ${countStepHtml(round)}
           </div>
-          <div class="pips">
-            ${round.steps.map((s, i) =>
-              `<button type="button" data-i="${i}" class="${i === stepAt ? 'on' : ''} ${s[0] > 0 && round.holds.includes(s[0]) ? 'hold' : ''}">${s[0] || (s[1] === 'Rest' ? 'R' : 'S')}</button>`).join('')}
-          </div>
-          ${navSteps(stepAt, round.steps.length - 1)}
-        </div>
-        ${nav}`;
-      drillBody.querySelectorAll('.pips button').forEach(b => b.onclick = () => {
-        stepAt = +b.dataset.i;
-        paintCountLearn();
-      });
-      drillBody.querySelector('#step-prev').onclick = () => { stepAt--; paintCountLearn(); };
-      drillBody.querySelector('#step-next').onclick = () => { stepAt++; paintCountLearn(); };
+          ${nav}
+        </div>`;
+      bindCountStepNav(round);
     } else {
       const hold = pose.breaths || pose.hold || 'Five breaths';
       drillBody.innerHTML = `

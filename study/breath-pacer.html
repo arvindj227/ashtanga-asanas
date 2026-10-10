@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#15110F" id="meta-theme-color">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Breath, a pacer study</title>
+<script>if (navigator.standalone) document.documentElement.classList.add('ios-standalone');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&family=Noto+Serif+Devanagari:wght@400;500&display=swap" rel="stylesheet">
@@ -32,6 +35,8 @@
   --glow-a: .22;
   --scale: .56;
   --rise: 0px;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
 }
 
 [data-theme="dawn"] {
@@ -47,20 +52,65 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+html {
+  min-height: 100%;
+  background: var(--bg);
+  transition: background .9s ease, background-color .9s ease;
+}
+html::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--sat);
+  background: var(--bg);
+  pointer-events: none;
+  z-index: 2;
+  transition: background .9s ease;
+}
+html.ios-standalone,
+@media (display-mode: standalone) {
+  html {
+    height: 100lvh;
+    min-height: 100lvh;
+    overflow: hidden;
+    background: var(--bg);
+  }
+}
 body { overflow-y: auto; touch-action: pan-y; }
 
 body {
   font-family: var(--font-body);
   font-weight: 300;
   color: var(--fg);
+  min-height: 100dvh;
+  min-height: 100lvh;
   background: radial-gradient(120% 80% at 50% 110%, var(--bg-2) 0%, var(--bg) 60%);
+  background-color: var(--bg);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
-  transition: background .9s ease, color .9s ease;
+  transition: background .9s ease, color .9s ease, background-color .9s ease;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+html.ios-standalone body,
+@media (display-mode: standalone) {
+  body { min-height: 100lvh; }
+}
+/* Paint safe-area bands so nothing shows cream/white from the host page */
+body::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--sab);
+  background: var(--bg);
+  pointer-events: none;
+  z-index: 0;
+  transition: background .9s ease;
 }
 
 /* Grain */
@@ -76,10 +126,18 @@ body::before {
 .stage {
   position: relative;
   z-index: 1;
-  min-height: 100%;
+  min-height: 100dvh;
+  min-height: 100lvh;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  padding: max(22px, env(safe-area-inset-top)) 22px max(22px, env(safe-area-inset-bottom));
+  padding: calc(26px + var(--sat)) 22px calc(16px + var(--sab));
+}
+html.ios-standalone .stage,
+@media (display-mode: standalone) {
+  .stage {
+    padding-top: calc(30px + var(--sat));
+    padding-bottom: calc(20px + var(--sab));
+  }
 }
 
 /* Header */
@@ -253,7 +311,12 @@ body::before {
 .controls.hidden, .top.hidden { opacity: 0; pointer-events: none; visibility: hidden; transition-delay: 0s, 0s, .6s; }
 .controls.hidden { transform: translateY(8px); }
 
-.controls { flex-direction: column; align-items: center; gap: 14px; padding-bottom: 6px; }
+.controls {
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: max(6px, calc(var(--sab) * 0.25));
+}
 
 /* Segmented sound control: one track, a sliding thumb */
 .seg {
@@ -875,12 +938,22 @@ input[type=range]::-moz-range-thumb {
   el.settings.addEventListener('click', () => openSheet(true));
   el.done.addEventListener('click', () => openSheet(false));
   el.scrim.addEventListener('click', () => openSheet(false));
+  const metaTheme = document.getElementById('meta-theme-color');
+  function syncThemeChrome() {
+    const dusk = S.theme === 'dusk';
+    const color = dusk ? '#15110F' : '#F7F2ED';
+    if (metaTheme) metaTheme.setAttribute('content', color);
+    document.documentElement.style.backgroundColor = color;
+  }
+
   el.theme.addEventListener('click', () => {
     S.theme = S.theme === 'dusk' ? 'dawn' : 'dusk';
     body.dataset.theme = S.theme;
     el.theme.setAttribute('aria-pressed', S.theme === 'dawn');
+    syncThemeChrome();
     paint(S.fullness);
   });
+  syncThemeChrome();
 
   // Initial (supports ?theme=dawn and ?auto=1 for linking straight into a breath)
   const q = new URLSearchParams(location.search);
