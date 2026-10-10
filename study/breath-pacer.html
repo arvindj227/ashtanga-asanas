@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#15110F" id="meta-theme-color">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Breath, a pacer study</title>
+<title>Breath pacer</title>
 <script>if (navigator.standalone) document.documentElement.classList.add('ios-standalone');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,14 +78,12 @@ html.ios-standalone,
     background: var(--bg);
   }
 }
-body { overflow-y: auto; touch-action: pan-y; }
-
 body {
   font-family: var(--font-body);
   font-weight: 300;
   color: var(--fg);
-  min-height: 100dvh;
-  min-height: 100lvh;
+  height: 100svh;
+  max-height: 100lvh;
   background: radial-gradient(120% 80% at 50% 110%, var(--bg-2) 0%, var(--bg) 60%);
   background-color: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -94,10 +92,12 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  max-width: 430px;
+  margin: 0 auto;
 }
 html.ios-standalone body,
 @media (display-mode: standalone) {
-  body { min-height: 100lvh; }
+  body { height: 100lvh; max-height: 100lvh; }
 }
 /* Paint safe-area bands so nothing shows cream/white from the host page */
 body::after {
@@ -126,18 +126,22 @@ body::before {
 .stage {
   position: relative;
   z-index: 1;
-  min-height: 100dvh;
-  min-height: 100lvh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  padding: calc(26px + var(--sat)) 22px calc(16px + var(--sab));
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: calc(22px + var(--sat)) 20px calc(12px + max(8px, var(--sab)));
+  overflow: hidden;
 }
 html.ios-standalone .stage,
 @media (display-mode: standalone) {
   .stage {
     padding-top: calc(30px + var(--sat));
-    padding-bottom: calc(20px + var(--sab));
+    padding-bottom: calc(16px + var(--sab));
   }
+}
+.top,
+.controls {
+  flex-shrink: 0;
 }
 
 /* Header */
@@ -179,23 +183,27 @@ html.ios-standalone .stage,
 
 /* Centre */
 .centre {
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(18px, 4vmin, 40px);
+  gap: clamp(6px, 2.2vmin, 28px);
   min-height: 0;
+  overflow: hidden;
 }
 
 .disc-wrap {
   position: relative;
-  width: min(62vmin, 420px, 36vh);
-  height: min(62vmin, 420px, 36vh);
+  flex: 0 1 auto;
+  --disc-size: min(56vmin, 32svh, 34dvh, 320px);
+  width: min(var(--disc-size), 100%);
+  height: min(var(--disc-size), 100%);
+  max-width: 100%;
   display: grid;
   place-items: center;
   cursor: pointer;
 }
-
 /* Resting ring: shows the full extent of the breath */
 .disc-wrap::before {
   content: '';
@@ -256,12 +264,14 @@ html.ios-standalone .stage,
 
 /* Labels */
 .label {
+  flex-shrink: 0;
+  max-width: 100%;
   text-align: center;
 }
 .phase {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(2.6rem, 8vmin, 3.6rem);
+  font-size: clamp(2rem, 6.5vmin, 3.2rem);
   letter-spacing: .01em;
   line-height: 1;
   transition: opacity .55s ease, transform .55s ease;
@@ -279,8 +289,8 @@ html.ios-standalone .stage,
 .sanskrit.swap { opacity: 0; }
 
 .counter {
-  margin-top: 1.5em;
-  margin-bottom: .4em;
+  margin-top: clamp(.6em, 2vmin, 1.2em);
+  margin-bottom: .2em;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -314,8 +324,15 @@ html.ios-standalone .stage,
 .controls {
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding-bottom: max(6px, calc(var(--sab) * 0.25));
+  gap: 10px;
+  padding-bottom: 2px;
+}
+@media (max-height: 720px) {
+  .study-back { margin-bottom: 6px; }
+  .eyebrow { font-size: .62rem; }
+  .disc-wrap { --disc-size: min(50vmin, 26svh, 240px); }
+  .sanskrit { margin-top: .35em; font-size: clamp(1.05rem, 3.8vmin, 1.35rem); }
+  .seg button { padding: 8px 0; font-size: .9rem; }
 }
 
 /* Segmented sound control: one track, a sliding thumb */
@@ -480,7 +497,7 @@ input[type=range]::-moz-range-thumb {
   <header class="top" id="top">
     <div>
       <a class="study-back" href="index.html">← Study</a>
-      <div class="eyebrow">Breath<span>|</span>a pacer study</div>
+      <div class="eyebrow">Breath pacer</div>
     </div>
     <div class="icons">
       <button class="icon-btn" id="btn-theme" aria-pressed="false" title="Dawn / Dusk">
