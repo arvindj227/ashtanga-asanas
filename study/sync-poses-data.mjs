@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -12,3 +13,9 @@ const data = new Function(`${chunk}; return { PRIMARY, SECONDARY, FINISHING, POS
 const out = `/* Auto-synced from index.html pose tables. Rebuild: node study/sync-poses-data.mjs */\nwindow.STUDY_DATA = ${JSON.stringify(data)};\n`;
 fs.writeFileSync(path.join(root, 'study/poses-data.js'), out);
 console.log('Wrote study/poses-data.js');
+
+const bg = spawnSync(process.execPath, [path.join(path.dirname(fileURLToPath(import.meta.url)), 'sync-pose-image-bg.mjs')], {
+  stdio: 'inherit',
+  cwd: root,
+});
+if (bg.status !== 0) process.exit(bg.status || 1);

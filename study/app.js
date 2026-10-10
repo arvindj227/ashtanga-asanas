@@ -4,11 +4,49 @@
   const viewHub = document.getElementById('view-hub');
   const viewDrill = document.getElementById('view-drill');
   const drillBody = document.getElementById('drill-body');
+  const drillCard = document.getElementById('drill-card');
   const drillTitle = document.getElementById('drill-title');
+  const drillTools = document.getElementById('drill-tools');
   const tabLearn = document.getElementById('tab-learn');
   const tabRecall = document.getElementById('tab-recall');
+  const hubListWrap = document.getElementById('hub-list-wrap');
+  const studyProgressMeta = document.getElementById('study-progress-meta');
+  const studyProgressFill = document.getElementById('study-progress-fill');
 
   const { PRIMARY, SECONDARY, FINISHING, POSE_META, AFTER_TEXT } = window.STUDY_DATA;
+  const POSE_IMAGE_BG = window.POSE_IMAGE_BG || {};
+  const PAPER_RGB = [253, 250, 247];
+
+  function poseImgKey(src) {
+    const i = src.indexOf('images/poses/');
+    if (i < 0) return null;
+    return src.slice(i).split('?')[0];
+  }
+
+  function poseImgBgHex(src) {
+    const key = poseImgKey(src);
+    const hex = key && POSE_IMAGE_BG[key];
+    if (!hex) return null;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const nearPaper = Math.max(
+      Math.abs(r - PAPER_RGB[0]),
+      Math.abs(g - PAPER_RGB[1]),
+      Math.abs(b - PAPER_RGB[2]),
+    ) <= 12;
+    return nearPaper ? '#FDFAF7' : hex;
+  }
+
+  function poseImgBgAttr(src) {
+    const hex = poseImgBgHex(src);
+    return hex ? ` style="background:${hex}"` : '';
+  }
+
+  function poseFig(src, imgAttrs = 'loading="lazy" decoding="async"') {
+    return `<div class="fig"${poseImgBgAttr(src)}><img src="${src}" alt="" ${imgAttrs}></div>`;
+  }
+
   const ALL_POSES = [...PRIMARY, ...SECONDARY, ...FINISHING]
     .filter(p => !p.skip && p.img)
     .map(p => ({ ...p, ...(POSE_META[p.id] || {}), img: '../' + p.img }));
@@ -49,17 +87,51 @@
     return NUM[n];
   }
 
-  let showSanskrit = localStorage.getItem('study-sk') === '1';
-  function sanskritToggleHtml() {
-    return `<button type="button" class="sk-toggle${showSanskrit ? ' on' : ''}" id="sk-toggle" aria-pressed="${showSanskrit}">Sanskrit</button>`;
+  function countOptionLabel(n) {
+    if (!NUM[n]) return String(n);
+    return `${NUM[n][0]} (${n})`;
   }
 
-  function studyTop(left, right, opts = {}) {
-    const sk = opts.sanskrit !== false ? sanskritToggleHtml() : '';
-    const rightHtml = right
-      ? `<span class="q-top-right">${sk}<span class="q-progress">${right}</span></span>`
-      : (sk ? `<span class="q-top-right">${sk}</span>` : '');
-    return `<div class="q-top"><span>${left}</span>${rightHtml}</div>`;
+  function setDrillTools(html) {
+    if (drillTools) drillTools.innerHTML = html || '';
+  }
+
+  function setStudyProgress(label, current = 0, total = 0) {
+    if (studyProgressMeta) studyProgressMeta.textContent = label;
+    if (studyProgressFill) {
+      studyProgressFill.style.width = total > 0
+        ? `${Math.min(100, (current / total) * 100)}%`
+        : '0%';
+    }
+  }
+
+  function learnJumpTools(poseIndex, list) {
+    return compactPosePicker(poseIndex, list);
+  }
+
+  function recallShell(mainHtml, footHtml) {
+    if (drillCard) drillCard.classList.add('has-recall-foot');
+    return `<div class="recall-layout"><div class="recall-main">${mainHtml}</div><div class="recall-foot">${footHtml}</div></div>`;
+  }
+
+  function bindRecallNext(next, onNext, hidden = true) {
+    if (hidden) next.classList.add('hidden');
+    next.onclick = onNext;
+  }
+
+  function bindRecallOpts(opts, answer, onDone) {
+    let locked = false;
+    opts.forEach(b => {
+      b.onclick = () => {
+        if (locked) return;
+        locked = true;
+        const ok = +b.dataset.a === answer;
+        b.classList.add(ok ? 'good' : 'bad');
+        if (!ok) opts.find(o => +o.dataset.a === answer)?.classList.add('good');
+        opts.forEach(o => { o.disabled = true; });
+        onDone(ok);
+      };
+    });
   }
 
   const TRADITIONAL_NAME_GLOSS = 'Part of the traditional name.';
@@ -74,24 +146,13 @@
     return part && !GENERIC_GLOSS.has(part[1]);
   }
 
-  function bindStudyChrome(repaint) {
-    const t = drillBody.querySelector('#sk-toggle');
-    if (t) {
-      t.onclick = () => {
-        showSanskrit = !showSanskrit;
-        localStorage.setItem('study-sk', showSanskrit ? '1' : '0');
-        repaint();
-      };
-    }
-  }
-
   function devHtml(text) {
-    if (!showSanskrit || !text) return '';
+    if (!text) return '';
     return `<span class="dev">${text}</span>`;
   }
 
   function countDevHtml(dev) {
-    if (!showSanskrit || !dev) return '';
+    if (!dev) return '';
     return `<div class="dev">${dev}</div>`;
   }
 
@@ -342,68 +403,100 @@
     return poseLearnParts(pose);
   }
 
+  const ROOT_LABEL_POOL = ROOT_GLOSS.map(([k]) => k).filter(k => strip(k) !== 'asana');
+  const GLOSS_MEANING_POOL = [...new Set(ROOT_GLOSS.map(([, g]) => g).filter(g => g !== ASANA_GLOSS))];
+
   function buildRootQuestions() {
     const qs = [];
-    const fillerPool = ['pāda', 'ūrdhva', 'supta', 'parivrtta', 'supta', 'koṇa', 'utthita', 'paścima'];
     ROOT_POSES.forEach(pose => {
       const use = rootsDisplayParts(pose).filter(isTeachablePart);
       if (!use.length) return;
       const pick = shuffle(use)[0];
-      const wrongFromPose = shuffle(use.filter(p => p[0] !== pick[0]).map(p => p[0]));
-      const fillers = shuffle(fillerPool.filter(x => x !== pick[0] && !use.some(p => p[0] === x)));
-      const opts = shuffle([pick[0], ...wrongFromPose.slice(0, 2), ...fillers].slice(0, 4));
-      while (opts.length < 4) opts.push(fillers[0] || 'pāda');
-      qs.push({
-        pose,
-        q: `Which part means “${pick[1].replace(/\.$/, '')}”?`,
-        options: opts,
-        answer: opts.indexOf(pick[0]),
-        why: `${pick[0]}: ${pick[1]}`,
-      });
+      const glossPlain = pick[1].replace(/\.$/, '');
+      if (Math.random() < 0.5) {
+        const wrong = shuffle(ROOT_LABEL_POOL.filter(r => r !== pick[0])).slice(0, 3);
+        const options = shuffle([pick[0], ...wrong]);
+        qs.push({
+          mode: 'pick-root',
+          q: `Which root means “${glossPlain}”?`,
+          options,
+          answer: options.indexOf(pick[0]),
+        });
+      } else {
+        const wrong = shuffle(GLOSS_MEANING_POOL.filter(g => g !== pick[1])).slice(0, 3);
+        const options = shuffle([pick[1], ...wrong]);
+        qs.push({
+          mode: 'pick-gloss',
+          q: `What does “${pick[0]}” mean?`,
+          options,
+          answer: options.indexOf(pick[1]),
+        });
+      }
     });
     return qs;
   }
 
+  function gazeChoice(gazeText) {
+    const g = (gazeText || '').split(',')[0].trim();
+    if (g.includes('Hand')) return 'Hand';
+    if (g.includes('Foot')) return 'Foot';
+    if (g.includes('Thumb')) return 'Thumbs';
+    if (g.includes('Side')) return 'Side';
+    if (g.includes('Up')) return 'Up';
+    if (g.includes('Third')) return 'Third eye';
+    if (g.includes('Navel')) return 'Navel';
+    if (g.includes('Eye')) return 'Eyes closed';
+    return 'Nose';
+  }
+
   function buildGazeQuestions() {
-    const pool = ['Nose', 'Hand', 'Foot', 'Thumbs', 'Side', 'Up', 'Third eye', 'Navel', 'Eyes closed'];
-    return ALL_POSES.filter(p => p.gaze).map(pose => {
-      const g = pose.gaze.split(',')[0].trim();
-      const norm = g.includes('Hand') ? 'Hand' : g.includes('Foot') ? 'Foot' : g.includes('Thumb') ? 'Thumbs'
-        : g.includes('Side') ? 'Side' : g.includes('Up') ? 'Up' : g.includes('Third') ? 'Third eye'
-          : g.includes('Navel') ? 'Navel' : g.includes('Eye') ? 'Eyes closed' : 'Nose';
-      const opts = shuffle([norm, ...shuffle(pool.filter(x => x !== norm)).slice(0, 3)]);
-      let q = 'Where is the gaze?';
-      let why = g;
+    const gazePool = ['Nose', 'Hand', 'Foot', 'Thumbs', 'Side', 'Up', 'Third eye', 'Navel', 'Eyes closed'];
+    const holdPool = ['5 breaths', '5 each side', '5 to 10', '10 to 25 breaths', '10 to 20 minutes', 'A few breaths'];
+    const qs = [];
+    ALL_POSES.forEach(pose => {
+      if (pose.gaze) {
+        const norm = gazeChoice(pose.gaze);
+        const opts = shuffle([norm, ...shuffle(gazePool.filter(x => x !== norm)).slice(0, 3)]);
+        qs.push({
+          pose,
+          kind: 'gaze',
+          q: `Where is the gaze in ${pose.s}?`,
+          hidePoseName: true,
+          options: opts,
+          answer: opts.indexOf(norm),
+        });
+      }
       if (pose.rep) {
         const repPool = ['Nothing else', pose.rep, '3 to 5 rounds', 'Nine rolls', '5 jumps forward and back'];
-        const repOpts = shuffle([...new Set(repPool)]).slice(0, 4);
-        while (repOpts.length < 4) repOpts.push('Nothing else');
-        return {
+        const options = shuffle([...new Set(repPool)]).slice(0, 4);
+        if (!options.includes(pose.rep)) options[0] = pose.rep;
+        const qText = pose.rep.includes('roll')
+          ? `Along with the five breaths in ${pose.s}?`
+          : `What repeats in ${pose.s}?`;
+        qs.push({
           pose,
-          q: pose.rep.includes('roll') ? 'Along with the five breaths?' : 'What repeats in this pose?',
-          options: repOpts,
-          answer: repOpts.indexOf(pose.rep),
-          why: pose.rep,
-        };
-      } else if (pose.hold && pose.hold.includes('minute')) {
-        const choices = ['5 breaths', '5 each side', '10 to 25 breaths', pose.hold];
-        const holdOpts = shuffle(choices);
-        return {
-          pose,
-          q: 'How long is the hold?',
-          options: holdOpts,
-          answer: holdOpts.indexOf(pose.hold),
-          why: pose.hold,
-        };
+          kind: 'rep',
+          q: qText,
+          hidePoseName: true,
+          options,
+          answer: options.indexOf(pose.rep),
+        });
       }
-      return {
-        pose,
-        q,
-        options: opts,
-        answer: opts.indexOf(norm),
-        why: pose.rep ? `${pose.rep}. Gaze: ${g}.` : `Gaze: ${g}.`,
-      };
+      const holdText = pose.hold || pose.breaths;
+      if (holdText) {
+        const choices = shuffle([...new Set([holdText, ...holdPool.filter(x => x !== holdText)])].slice(0, 4));
+        while (choices.length < 4) choices.push('5 breaths');
+        qs.push({
+          pose,
+          kind: 'hold',
+          q: `How long is ${pose.s} held?`,
+          hidePoseName: true,
+          options: choices,
+          answer: choices.indexOf(holdText),
+        });
+      }
     });
+    return qs;
   }
 
   function buildCountQuestions() {
@@ -420,15 +513,17 @@
           .filter(x => x !== n && x >= 1 && NUM[x]);
         const picks = [];
         near.forEach(x => { if (!picks.includes(x) && picks.length < 3) picks.push(x); });
-        const options = shuffle([NUM[n][0], ...picks.map(x => NUM[x][0])]);
-        const next = holds[1] ? ` The next hold is ${NUM[holds[1]][0]}, ${holds[1]}.` : '';
+        const correct = countOptionLabel(n);
+        const options = shuffle([correct, ...picks.map(x => countOptionLabel(x))]);
+        const next = holds[1] ? ` The next hold is ${countOptionLabel(holds[1])}.` : '';
         qs.push({
           type: 'pose',
           pose,
           q: `Which count is the hold in ${pose.s}?`,
+          hidePoseName: true,
           options,
-          answer: options.indexOf(NUM[n][0]),
-          why: `${NUM[n][0]}, ${n}.${next}`,
+          answer: options.indexOf(correct),
+          why: `${correct}.${next}`,
         });
       }
       if (pose.rep) {
@@ -437,20 +532,23 @@
           type: 'pose',
           pose,
           q: `What is special in ${pose.s}?`,
+          hidePoseName: true,
           options: opts,
           answer: opts.indexOf(pose.rep),
           why: pose.rep,
         });
       }
-      if (pose.hold) {
-        const opts = shuffle(['5 breaths', '5 each side', pose.hold, '10 to 25 breaths']);
+      const holdText = pose.hold || pose.breaths;
+      if (holdText && !(count && holds.length && !count.ask)) {
+        const opts = shuffle(['5 breaths', '5 each side', holdText, '10 to 25 breaths']);
         qs.push({
           type: 'pose',
           pose,
           q: `How long is ${pose.s} held?`,
+          hidePoseName: true,
           options: opts,
-          answer: opts.indexOf(pose.hold),
-          why: pose.hold,
+          answer: opts.indexOf(holdText),
+          why: holdText,
         });
       }
     });
@@ -463,7 +561,7 @@
     if (slice.length < 3) continue;
     ORDER_CHUNKS.push({
       title: `${slice[0].s} through ${slice[slice.length - 1].s}`,
-      poses: slice.map(p => [p.s, p.img, p.s.split(' ')[0]]),
+      poses: slice.map(p => [p.s, p.img, p.e || p.s.split(' ')[0]]),
     });
   }
 
@@ -497,9 +595,13 @@
   }
 
   function posePicker(index, list = ALL_POSES) {
+    return compactPosePicker(index, list);
+  }
+
+  function compactPosePicker(index, list = ALL_POSES) {
     const opts = list.map((p, i) =>
       `<option value="${i}"${i === index ? ' selected' : ''}>${i + 1}. ${p.s}</option>`).join('');
-    return `<label class="pose-jump"><span>Jump to pose</span><select id="pose-select">${opts}</select></label>`;
+    return `<label class="pose-jump-compact"><span class="pose-jump-label">Jump to pose</span><select id="pose-select" aria-label="Jump to pose">${opts}</select></label>`;
   }
 
   function bindPosePicker(onPick) {
@@ -546,7 +648,7 @@
   function renderHub() {
     hubList.innerHTML = HUB[hubMode].map(it => `
       <button type="button" class="hub-row" data-id="${it.id}">
-        <img src="${it.img}" alt="">
+        <img src="${it.img}" alt=""${poseImgBgAttr(it.img)}>
         <div><b>${it.title}</b><span>${it.sub}</span></div>
       </button>`).join('');
     hubList.querySelectorAll('.hub-row').forEach(b => {
@@ -565,6 +667,7 @@
     drillId = id;
     const item = HUB[hubMode].find(x => x.id === id);
     drillTitle.textContent = item.title;
+    setStudyProgress(item.title, 0, 0);
     viewHub.classList.add('hidden');
     viewDrill.classList.remove('hidden');
     if (hubMode === 'learn') {
@@ -584,8 +687,11 @@
 
   function closeDrill() {
     drillId = null;
+    setDrillTools('');
+    if (drillCard) drillCard.classList.remove('has-recall-foot');
     viewDrill.classList.add('hidden');
     viewHub.classList.remove('hidden');
+    setStudyProgress('Study', 0, 0);
   }
 
   let poseAt = 0;
@@ -601,15 +707,15 @@
     const pose = ALL_POSES[poseAt];
     const round = window.VINYASA[pose.id];
     const nav = navPoses(poseAt);
+    setDrillTools(learnJumpTools(poseAt, ALL_POSES));
+    setStudyProgress(`Pose ${poseAt + 1} of ${ALL_POSES.length}`, poseAt + 1, ALL_POSES.length);
     if (round) {
       const step = round.steps[stepAt];
       const [n, breath, move] = step;
       const [sa, dev] = countName(n, breath);
       const held = n > 0 && round.holds.includes(n);
       drillBody.innerHTML = `
-        ${posePicker(poseAt)}
-        ${studyTop('Learn', `Pose ${poseAt + 1} of ${ALL_POSES.length}`)}
-        <div class="fig"><img src="${pose.img}" alt=""></div>
+        ${poseFig(pose.img)}
         <div class="pose-name">${pose.s}${devHtml(pose.d)}</div>
         <div class="count-panel">
           <div class="count-now">
@@ -627,7 +733,6 @@
           ${navSteps(stepAt, round.steps.length - 1)}
         </div>
         ${nav}`;
-      bindStudyChrome(paintCountLearn);
       drillBody.querySelectorAll('.pips button').forEach(b => b.onclick = () => {
         stepAt = +b.dataset.i;
         paintCountLearn();
@@ -637,9 +742,7 @@
     } else {
       const hold = pose.breaths || pose.hold || 'Five breaths';
       drillBody.innerHTML = `
-        ${posePicker(poseAt)}
-        ${studyTop('Learn', `Pose ${poseAt + 1} of ${ALL_POSES.length}`)}
-        <div class="fig"><img src="${pose.img}" alt=""></div>
+        ${poseFig(pose.img)}
         <div class="pose-name">${pose.s}${devHtml(pose.d)}</div>
         <div class="hold-card">
           <p><b>Hold</b> ${hold}</p>
@@ -648,7 +751,6 @@
           ${afterText(pose) ? `<p><b>Then</b> ${afterText(pose)}</p>` : ''}
         </div>
         ${nav}`;
-      bindStudyChrome(paintCountLearn);
     }
     bindPosePicker(i => { poseAt = i; stepAt = 0; paintCountLearn(); });
     bindPoseNav(poseAt, i => {
@@ -670,6 +772,7 @@
   }
 
   function paintCountQuestion() {
+    setStudyProgress(`Question ${countQ + 1} of ${COUNT_QS.length}`, countQ + 1, COUNT_QS.length);
     if (countQ >= COUNT_QS.length) {
       drillBody.innerHTML = `<div class="end-line">Finished</div><p class="fine">${COUNT_QS.length} questions.</p>${btnNext('Try again', 'retry')}`;
       drillBody.querySelector('#retry').onclick = () => { COUNT_QS = recallDeck(buildCountQuestions); mountCountRecall(); };
@@ -679,31 +782,21 @@
     const img = item.type === 'round' ? item.round.img : item.pose.img;
     const name = item.type === 'round' ? item.round.name : item.pose.s;
     const ask = item.type === 'round' ? item.ask : item;
-    drillBody.innerHTML = `
-      <div class="q-top"><span>Recall</span><span>${countQ + 1} of ${COUNT_QS.length}</span></div>
-      <div class="fig"><img src="${img}" alt=""></div>
-      <div class="pose-name">${name}</div>
-      <div class="ask"><p>${ask.q}</p>
+    const nameRow = ask.hidePoseName ? '' : `<div class="pose-name">${name}</div>`;
+    const main = `
+      ${poseFig(img, '')}
+      ${nameRow}
+      <div class="ask ask-flush"><p class="recall-q">${ask.q}</p>
         <div class="opts">
           ${ask.options.map((o, i) => `<button type="button" class="opt" data-a="${i}">${o}</button>`).join('')}
         </div>
-        <div class="why" id="count-why"></div>
-      </div>
-      ${btnNext(countQ === COUNT_QS.length - 1 ? 'See results' : 'Next', 'main-next', true)}`;
-    let locked = false;
-    const why = drillBody.querySelector('#count-why');
+      </div>`;
+    const foot = btnNext(countQ === COUNT_QS.length - 1 ? 'See results' : 'Next', 'main-next', true);
+    drillBody.innerHTML = recallShell(main, foot);
     const next = drillBody.querySelector('#main-next');
-    drillBody.querySelectorAll('.opt').forEach(b => b.onclick = () => {
-      if (locked) return;
-      locked = true;
-      const ok = +b.dataset.a === ask.answer;
-      b.classList.add(ok ? 'good' : 'bad');
-      if (!ok) drillBody.querySelector(`.opt[data-a="${ask.answer}"]`).classList.add('good');
-      why.textContent = ask.why;
-      drillBody.querySelectorAll('.opt').forEach(o => o.disabled = true);
-      next.classList.remove('hidden');
-    });
-    next.onclick = () => { countQ++; paintCountQuestion(); };
+    const opts = [...drillBody.querySelectorAll('.opt')];
+    bindRecallOpts(opts, ask.answer, () => next.classList.remove('hidden'));
+    bindRecallNext(next, () => { countQ++; paintCountQuestion(); });
   }
 
   let nameAt = 0;
@@ -726,11 +819,11 @@
     const parts = posePartsForLearn(pose);
     if (partAt >= parts.length) partAt = 0;
     const [, gloss] = parts[partAt] || parts[0];
+    setDrillTools(learnJumpTools(nameAt, ROOT_POSES));
+    setStudyProgress(`Pose ${nameAt + 1} of ${ROOT_POSES.length}`, nameAt + 1, ROOT_POSES.length);
     drillBody.innerHTML = `
-      ${posePicker(nameAt, ROOT_POSES)}
-      ${studyTop('Learn', `${nameAt + 1} of ${ROOT_POSES.length}`, { sanskrit: false })}
-      <div class="pose-name">${pose.s}</div>
-      <div class="parts">
+      <div class="pose-name roots-pose-name">${pose.s}</div>
+      <div class="parts roots-parts">
         ${parts.map((p, i) => `<button type="button" data-i="${i}" class="${i === partAt ? 'on' : ''}">${p[0]}</button>`).join('')}
       </div>
       <div class="gloss"><p>${gloss}</p></div>
@@ -759,61 +852,52 @@
   }
 
   function paintRootQuestion() {
+    setStudyProgress(`Question ${rootQ + 1} of ${ROOT_QS.length}`, rootQ + 1, ROOT_QS.length);
     if (rootQ >= ROOT_QS.length) {
       drillBody.innerHTML = `<div class="end-line">Finished</div>${btnNext('Try again', 'retry')}`;
       drillBody.querySelector('#retry').onclick = () => { ROOT_QS = recallDeck(buildRootQuestions); mountRootsRecall(); };
       return;
     }
     const item = ROOT_QS[rootQ];
-    drillBody.innerHTML = `
-      <div class="q-top"><span>Recall</span><span>${rootQ + 1} of ${ROOT_QS.length}</span></div>
-      <div class="pose-name">${item.pose.s}</div>
-      <div class="ask"><p>${item.q}</p>
+    const main = `
+      <div class="ask ask-flush"><p class="q-label">${item.q}</p>
         <div class="opts">
           ${item.options.map((o, i) => `<button type="button" class="opt" data-a="${i}">${o}</button>`).join('')}
         </div>
-      </div>
-      ${btnNext(rootQ === ROOT_QS.length - 1 ? 'Done' : 'Next', 'main-next', true)}`;
-    let locked = false;
+      </div>`;
+    const foot = btnNext(rootQ === ROOT_QS.length - 1 ? 'Done' : 'Next', 'main-next', true);
+    drillBody.innerHTML = recallShell(main, foot);
     const next = drillBody.querySelector('#main-next');
-    drillBody.querySelectorAll('.opt').forEach(b => b.onclick = () => {
-      if (locked) return;
-      locked = true;
-      const ok = +b.dataset.a === item.answer;
-      b.classList.add(ok ? 'good' : 'bad');
-      if (!ok) drillBody.querySelector(`.opt[data-a="${item.answer}"]`).classList.add('good');
-      drillBody.querySelectorAll('.opt').forEach(o => o.disabled = true);
-      next.classList.remove('hidden');
-    });
-    next.onclick = () => { rootQ++; paintRootQuestion(); };
+    const opts = [...drillBody.querySelectorAll('.opt')];
+    bindRecallOpts(opts, item.answer, () => next.classList.remove('hidden'));
+    bindRecallNext(next, () => { rootQ++; paintRootQuestion(); });
   }
 
   let gazePoseAt = 0;
   function mountGazeLearn() {
     gazePoseAt = 0;
+    setDrillTools('');
+    setStudyProgress('Nine drishtis', 0, 0);
     drillBody.innerHTML = `
-      ${studyTop('Learn', '')}
-      <p class="fine drishti-lede">Nine traditional drishtis. Names vary slightly by lineage.</p>
       <div class="drishti-ref">
         ${DRISHTI.map(d => `
           <div class="drishti-row">
-            <b>${d[0]}</b>${showSanskrit ? `<i>${d[1]}</i>` : ''}
+            <b>${d[0]}</b><i>${d[1]}</i>
             <p>${d[2]}. Often in ${d[3]}.</p>
           </div>`).join('')}
       </div>
       <hr class="soft">
       ${btnNext('Gaze by pose')}`;
-    bindStudyChrome(mountGazeLearn);
     drillBody.querySelector('#main-next').onclick = () => paintGazeByPose();
   }
 
   function paintGazeByPose() {
     const pose = ALL_POSES[gazePoseAt];
+    setDrillTools(learnJumpTools(gazePoseAt, ALL_POSES));
+    setStudyProgress(`Pose ${gazePoseAt + 1} of ${ALL_POSES.length}`, gazePoseAt + 1, ALL_POSES.length);
     drillBody.innerHTML = `
-      ${posePicker(gazePoseAt)}
-      ${studyTop('Learn', `${gazePoseAt + 1} of ${ALL_POSES.length}`)}
-      <div class="fig"><img src="${pose.img}" alt=""></div>
-      <div class="pose-name">${pose.s}</div>
+      ${poseFig(pose.img)}
+      <div class="pose-name">${pose.s}${devHtml(pose.d)}</div>
       <div class="hold-card">
         ${pose.gaze ? `<p><b>Gaze</b> ${pose.gaze}</p>` : '<p>No separate gaze note for this pose.</p>'}
         ${pose.rep ? `<p><b>Repeats</b> ${pose.rep}</p>` : ''}
@@ -822,7 +906,6 @@
         ${afterText(pose) ? `<p><b>Then</b> ${afterText(pose)}</p>` : ''}
       </div>
       ${navPoses(gazePoseAt)}`;
-    bindStudyChrome(paintGazeByPose);
     bindPosePicker(i => { gazePoseAt = i; paintGazeByPose(); });
     bindPoseNav(gazePoseAt, i => {
       if (i >= ALL_POSES.length) {
@@ -844,6 +927,7 @@
   }
 
   function paintGazeQuestion() {
+    setStudyProgress(`Question ${gAt + 1} of ${GAZE_QS.length}`, gAt + 1, GAZE_QS.length);
     if (gAt >= GAZE_QS.length) {
       drillBody.innerHTML = `
         <div class="end-line">${gScore} of ${GAZE_QS.length}</div>
@@ -855,31 +939,23 @@
       return;
     }
     const q = GAZE_QS[gAt];
-    drillBody.innerHTML = `
-      <div class="q-top"><span>Recall</span><span>${gAt + 1} of ${GAZE_QS.length}</span></div>
-      <div class="fig"><img src="${q.pose.img}" alt=""></div>
-      <div class="pose-name">${q.pose.s}</div>
-      <div class="q-label">${q.q}</div>
+    const nameRow = q.hidePoseName ? '' : `<div class="pose-name">${q.pose.s}</div>`;
+    const main = `
+      ${poseFig(q.pose.img, '')}
+      ${nameRow}
+      <div class="q-label recall-q">${q.q}</div>
       <div class="opts">
         ${q.options.map((o, i) => `<button type="button" class="opt" data-a="${i}">${o}</button>`).join('')}
-      </div>
-      <div class="why" id="gaze-why"></div>
-      ${btnNext(gAt === GAZE_QS.length - 1 ? 'See score' : 'Next', 'main-next', true)}`;
-    let locked = false;
-    const why = drillBody.querySelector('#gaze-why');
+      </div>`;
+    const foot = btnNext(gAt === GAZE_QS.length - 1 ? 'See score' : 'Next', 'main-next', true);
+    drillBody.innerHTML = recallShell(main, foot);
     const next = drillBody.querySelector('#main-next');
-    drillBody.querySelectorAll('.opt').forEach(b => b.onclick = () => {
-      if (locked) return;
-      locked = true;
-      const ok = +b.dataset.a === q.answer;
+    const opts = [...drillBody.querySelectorAll('.opt')];
+    bindRecallOpts(opts, q.answer, ok => {
       if (ok) gScore++;
-      b.classList.add(ok ? 'good' : 'bad');
-      if (!ok) drillBody.querySelector(`.opt[data-a="${q.answer}"]`).classList.add('good');
-      why.textContent = q.why;
-      drillBody.querySelectorAll('.opt').forEach(o => o.disabled = true);
       next.classList.remove('hidden');
     });
-    next.onclick = () => { gAt++; paintGazeQuestion(); };
+    bindRecallNext(next, () => { gAt++; paintGazeQuestion(); });
   }
 
   let orderRun = [];
@@ -887,6 +963,7 @@
   let placed = [];
   let bank = [];
   let orderFrozen = false;
+  let orderPickSlot = null;
 
   function mountOrderRecall() {
     orderRun = shuffle(ORDER_CHUNKS.map((_, i) => i)).slice(0, Math.min(ORDER_ROUNDS, ORDER_CHUNKS.length));
@@ -896,95 +973,259 @@
 
   function newOrder() {
     orderFrozen = false;
+    orderPickSlot = null;
     const set = ORDER_CHUNKS[orderRun[orderRunAt]];
     placed = Array(set.poses.length).fill(null);
     bank = shuffle(set.poses.map((p, i) => i));
     renderOrder('');
   }
 
+  function orderRetryRound() {
+    orderFrozen = false;
+    orderPickSlot = null;
+    const set = ORDER_CHUNKS[orderRun[orderRunAt]];
+    placed = Array(set.poses.length).fill(null);
+    bank = shuffle([...set.poses.keys()]);
+    renderOrder('');
+  }
+
+  function orderLabel(pose) {
+    return `<span class="label"><b>${pose[0]}</b></span>`;
+  }
+
+  function orderBankCap(pose) {
+    const s = pose[0];
+    return s.length > 22 ? `${s.slice(0, 20)}…` : s;
+  }
+
+  function orderPlaceInSlot(slotIdx, poseIdx) {
+    const existing = placed[slotIdx];
+    if (existing !== null && existing !== poseIdx && !bank.includes(existing)) bank.push(existing);
+    placed[slotIdx] = poseIdx;
+    bank = bank.filter(x => x !== poseIdx);
+  }
+
+  function orderReturnToBank(slotIdx) {
+    const id = placed[slotIdx];
+    if (id === null) return;
+    bank.push(id);
+    placed[slotIdx] = null;
+  }
+
+  function bindOrderDnD(set) {
+    const readDrop = (raw) => {
+      if (!raw) return null;
+      if (raw.startsWith('b:')) return { from: 'bank', id: +raw.slice(2) };
+      if (raw.startsWith('s:')) {
+        const [, slot, id] = raw.split(':');
+        return { from: 'slot', slot: +slot, id: +id };
+      }
+      return null;
+    };
+
+    drillBody.querySelectorAll('[data-slot]').forEach(el => {
+      el.ondragover = e => { e.preventDefault(); el.classList.add('drag-over'); };
+      el.ondragleave = () => el.classList.remove('drag-over');
+      el.ondrop = e => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        const drop = readDrop(e.dataTransfer.getData('text/plain'));
+        const slotIdx = +el.dataset.slot;
+        if (!drop) return;
+        if (drop.from === 'bank') orderPlaceInSlot(slotIdx, drop.id);
+        else if (drop.from === 'slot') {
+          const fromId = placed[drop.slot];
+          const toId = placed[slotIdx];
+          placed[drop.slot] = toId;
+          placed[slotIdx] = fromId;
+        }
+        orderPickSlot = null;
+        if (placed.every(x => x !== null)) checkOrder();
+        else renderOrder('');
+      };
+    });
+
+    drillBody.querySelectorAll('.bank button').forEach(b => {
+      b.draggable = true;
+      b.ondragstart = e => e.dataTransfer.setData('text/plain', `b:${b.dataset.id}`);
+    });
+
+    drillBody.querySelectorAll('[data-slot]').forEach(b => {
+      if (placed[+b.dataset.slot] === null) return;
+      b.draggable = true;
+      b.ondragstart = e => {
+        const i = +b.dataset.slot;
+        e.dataTransfer.setData('text/plain', `s:${i}:${placed[i]}`);
+      };
+    });
+  }
+
   function renderOrder(msg) {
     const set = ORDER_CHUNKS[orderRun[orderRunAt]];
-    const allGood = orderFrozen && placed.every((id, i) => id === i);
-    drillBody.innerHTML = `
-      <div class="q-top"><span>Recall</span><span>${orderRunAt + 1} of ${orderRun.length}</span></div>
+    const allFull = placed.every(x => x !== null);
+    const allGood = orderFrozen && allFull && placed.every((id, i) => id === i);
+    const showResult = orderFrozen && allFull;
+    setStudyProgress(`Round ${orderRunAt + 1} of ${orderRun.length}`, orderRunAt + 1, orderRun.length);
+    let msgHtml = '';
+    if (msg) {
+      const cls = allGood ? 'order-msg good' : 'order-msg';
+      msgHtml = `<p class="${cls}" id="order-msg">${msg}</p>`;
+    }
+    const main = `
       <div class="slots">
         ${placed.map((id, i) => {
+          const pick = !orderFrozen && orderPickSlot === i ? ' slot-pick' : '';
+          const state = showResult && id !== null ? (id === i ? ' good' : ' bad') : '';
           if (id === null) {
-            return `<div class="slot"><span class="n">${i + 1}</span><span class="ph"></span><span class="empty">Empty</span></div>`;
+            return `<button type="button" class="slot slot-empty${pick}" data-slot="${i}"><span class="n">${i + 1}</span><span class="ph"></span><span class="empty">Empty</span></button>`;
           }
-          const cls = orderFrozen ? (id === i ? 'good' : 'bad') : '';
           const tag = orderFrozen ? 'div' : 'button';
           const attrs = orderFrozen ? '' : ` type="button" data-slot="${i}"`;
-          return `<${tag} class="slot ${cls}"${attrs}><span class="n">${i + 1}</span><img class="thumb" src="${set.poses[id][1]}" alt=""><span class="label">${set.poses[id][0]}</span></${tag}>`;
+          const thumbSrc = set.poses[id][1];
+          return `<${tag} class="slot${state}${pick}"${attrs}><span class="n">${i + 1}</span><img class="thumb" src="${thumbSrc}" alt=""${poseImgBgAttr(thumbSrc)}>${orderLabel(set.poses[id])}</${tag}>`;
         }).join('')}
       </div>
       <div class="bank">
         ${orderFrozen ? '' : bank.map(id => `
           <button type="button" data-id="${id}" title="${set.poses[id][0]}">
-            <img src="${set.poses[id][1]}" alt="">
-            <span class="bank-cap">${set.poses[id][2]}</span>
+            <img src="${set.poses[id][1]}" alt=""${poseImgBgAttr(set.poses[id][1])}>
+            <span class="bank-cap">${orderBankCap(set.poses[id])}</span>
           </button>`).join('')}
       </div>
-      <div class="end-line" id="order-msg">${msg}</div>
-      <div class="order-actions">
-        ${btnNext(orderRunAt < orderRun.length - 1 ? 'Next round' : 'Done', 'order-next', !allGood)}
-        <button type="button" class="btn-ghost full" id="order-reset">${orderFrozen ? 'Reset tiles' : 'Shuffle again'}</button>
-      </div>`;
+      ${msgHtml}`;
+    const resetWarn = showResult && !allGood;
+    const resetLabel = showResult && !allGood ? 'Reset and shuffle' : 'Shuffle again';
+    const foot = `
+      ${btnNext(orderRunAt < orderRun.length - 1 ? 'Next round' : 'Done', 'order-next', !allGood)}
+      <button type="button" class="btn-ghost full${resetWarn ? ' order-reset-warn' : ''}" id="order-reset">${resetLabel}</button>`;
+    drillBody.innerHTML = recallShell(main, foot);
     const nextChunk = drillBody.querySelector('#order-next');
     if (nextChunk && !nextChunk.classList.contains('hidden')) {
       nextChunk.onclick = () => {
+        orderPickSlot = null;
         if (orderRunAt < orderRun.length - 1) { orderRunAt++; newOrder(); }
         else closeDrill();
       };
     }
     if (!orderFrozen) {
-      drillBody.querySelectorAll('.bank button').forEach(b => b.onclick = () => {
-        const hole = placed.indexOf(null);
-        if (hole < 0) return;
-        placed[hole] = +b.dataset.id;
-        bank = bank.filter(id => id !== +b.dataset.id);
-        if (placed.every(x => x !== null)) checkOrder();
-        else renderOrder('');
+      bindOrderDnD(set);
+      drillBody.querySelectorAll('.bank button').forEach(b => {
+        b.onclick = () => {
+          const poseIdx = +b.dataset.id;
+          if (orderPickSlot !== null) {
+            orderPlaceInSlot(orderPickSlot, poseIdx);
+            orderPickSlot = null;
+          } else {
+            const hole = placed.indexOf(null);
+            if (hole < 0) return;
+            orderPlaceInSlot(hole, poseIdx);
+          }
+          if (placed.every(x => x !== null)) checkOrder();
+          else renderOrder('');
+        };
       });
-      drillBody.querySelectorAll('[data-slot]').forEach(b => b.onclick = () => {
-        const i = +b.dataset.slot;
-        bank.push(placed[i]);
-        placed[i] = null;
-        renderOrder('');
+      drillBody.querySelectorAll('[data-slot]').forEach(b => {
+        b.onclick = () => {
+          const i = +b.dataset.slot;
+          if (orderPickSlot === null) {
+            if (placed[i] === null) return;
+            orderPickSlot = i;
+            renderOrder('');
+            return;
+          }
+          if (orderPickSlot === i) {
+            orderReturnToBank(i);
+            orderPickSlot = null;
+            renderOrder('');
+            return;
+          }
+          const from = orderPickSlot;
+          const tmp = placed[i];
+          placed[i] = placed[from];
+          placed[from] = tmp;
+          orderPickSlot = null;
+          if (placed.every(x => x !== null)) checkOrder();
+          else renderOrder('');
+        };
       });
     }
-    drillBody.querySelector('#order-reset').onclick = newOrder;
+    drillBody.querySelector('#order-reset').onclick = () => {
+      if (orderFrozen) orderRetryRound();
+      else newOrder();
+    };
   }
 
   function checkOrder() {
     const set = ORDER_CHUNKS[orderRun[orderRunAt]];
     const n = set.poses.length;
     const good = placed.map((id, i) => id === i);
+    orderPickSlot = null;
     orderFrozen = true;
     if (good.every(Boolean)) {
-      renderOrder('That is the order.');
+      renderOrder('You have the sequence.');
       return;
     }
-    renderOrder(`${good.filter(Boolean).length} of ${n} in the right place. Reset tiles to try again.`);
+    renderOrder(`Not quite. ${good.filter(Boolean).length} of ${n} in the right place. Reset to try again.`);
   }
 
-  tabLearn.onclick = () => {
-    hubMode = 'learn';
-    tabLearn.classList.add('on');
-    tabRecall.classList.remove('on');
-    tabLearn.setAttribute('aria-selected', 'true');
-    tabRecall.setAttribute('aria-selected', 'false');
-    renderHub();
-  };
-  tabRecall.onclick = () => {
-    hubMode = 'recall';
-    tabRecall.classList.add('on');
-    tabLearn.classList.remove('on');
-    tabRecall.setAttribute('aria-selected', 'true');
-    tabLearn.setAttribute('aria-selected', 'false');
-    renderHub();
-  };
+  function setHubTab(mode) {
+    const learn = mode === 'learn';
+    tabLearn.classList.toggle('active', learn);
+    tabRecall.classList.toggle('active', !learn);
+    tabLearn.setAttribute('aria-selected', learn ? 'true' : 'false');
+    tabRecall.setAttribute('aria-selected', learn ? 'false' : 'true');
+  }
+
+  function switchHubMode(mode) {
+    if (mode === hubMode) return;
+    hubList.classList.add('hub-anim-out');
+    setTimeout(() => {
+      hubMode = mode;
+      setHubTab(mode);
+      renderHub();
+      hubList.classList.remove('hub-anim-out');
+      hubList.classList.add('hub-anim-in');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => hubList.classList.remove('hub-anim-in'));
+      });
+    }, 180);
+  }
+
+  function initSlidingThumb(track, itemSel, thumbClass) {
+    if (!track) return;
+    const thumb = document.createElement('span');
+    thumb.className = thumbClass;
+    thumb.setAttribute('aria-hidden', 'true');
+    track.prepend(thumb);
+    track.classList.add('has-thumb');
+    let placed = false;
+    let lastX = null;
+    const place = () => {
+      const a = track.querySelector(itemSel);
+      if (!a || !a.offsetWidth) return;
+      const x = a.offsetLeft;
+      const w = a.offsetWidth;
+      if (x === lastX && thumb.style.width === `${w}px`) return;
+      if (!placed) thumb.style.transition = 'none';
+      thumb.style.width = `${w}px`;
+      thumb.style.translate = `${x}px 0`;
+      lastX = x;
+      if (!placed) {
+        void thumb.offsetWidth;
+        thumb.style.transition = '';
+        placed = true;
+      }
+    };
+    new MutationObserver(place).observe(track, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    new ResizeObserver(place).observe(track);
+    place();
+  }
+
+  tabLearn.onclick = () => switchHubMode('learn');
+  tabRecall.onclick = () => switchHubMode('recall');
   document.getElementById('btn-back').onclick = closeDrill;
 
+  initSlidingThumb(document.getElementById('hub-seg'), 'button.active', 'seg-thumb');
+  setStudyProgress('Study', 0, 0);
   renderHub();
 })();

@@ -10,24 +10,32 @@
 <link rel="stylesheet" href="study.css">
 </head>
 <body>
-<header class="app-head">
-  <h1>Study</h1>
-  <p>Learn the tradition. Recall it when you are ready.</p>
+<header class="study-top">
+  <div class="progress-wrap">
+    <div class="progress-meta" id="study-progress-meta">Study</div>
+    <div class="progress-bar"><div class="progress-fill" id="study-progress-fill"></div></div>
+  </div>
 </header>
 
 <main class="app-main">
   <div id="view-hub" class="view">
-    <div class="seg" role="tablist">
-      <button type="button" id="tab-learn" class="on" role="tab" aria-selected="true">Learn</button>
+    <h1 class="study-page-title">Study</h1>
+    <div class="seg has-thumb" id="hub-seg" role="tablist">
+      <button type="button" id="tab-learn" class="active" role="tab" aria-selected="true">Learn</button>
       <button type="button" id="tab-recall" role="tab" aria-selected="false">Recall</button>
     </div>
-    <div id="hub-list"></div>
+    <div class="hub-list-wrap" id="hub-list-wrap">
+      <div id="hub-list"></div>
+    </div>
   </div>
 
   <div id="view-drill" class="view hidden">
     <button type="button" id="btn-back" class="drill-back">← All topics</button>
-    <div class="card drill-card">
-      <h2 class="drill-topic" id="drill-title"></h2>
+    <div class="card drill-card" id="drill-card">
+      <div class="drill-head">
+        <h2 class="drill-topic" id="drill-title"></h2>
+        <div class="drill-tools" id="drill-tools"></div>
+      </div>
       <div id="drill-body"></div>
     </div>
   </div>
@@ -38,6 +46,7 @@
 </footer>
 
 <script src="poses-data.js"></script>
+<script src="pose-image-bg.js"></script>
 <script src="vinyasa-counts.js"></script>
 <script src="app.js"></script>
 </body>
