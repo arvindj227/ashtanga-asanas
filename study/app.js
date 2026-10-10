@@ -605,8 +605,10 @@
   }
 
   function bindPosePicker(onPick) {
-    const sel = drillBody.querySelector('#pose-select');
-    if (sel) sel.onchange = () => onPick(+sel.value);
+    const sel = (drillTools && drillTools.querySelector('#pose-select'))
+      || drillBody.querySelector('#pose-select');
+    if (!sel) return;
+    sel.onchange = () => onPick(+sel.value);
   }
 
   function bindPoseNav(index, onStep) {
